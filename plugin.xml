@@ -123,7 +123,7 @@
                 <source url="https://gitlab.linphone.org/BC/public/podspec.git" />
                 <source url="https://github.com/CocoaPods/Specs.git"/>
             </config>
-            <pods use-frameworks="false">
+            <pods use-frameworks="true">
                 <pod name="linphone-sdk" spec="~> 5.0" />
             </pods>
         </podspec>
@@ -139,7 +139,9 @@
         </config-file>
 
         <source-file src="src/ios/Linphone.swift" />
-        <!--source-file src="src/ios/ProviderDelegate.swift" />
+        <!--source-file src="src/ios/Linphone.h" />
+        <source-file src="src/ios/ProviderDelegate.m" />
+        <source-file src="src/ios/ProviderDelegate.h" />
         <source-file src="src/ios/CallView.xib" />
         <source-file src="src/ios/CallView.m" />
         <header-file src="src/ios/CallView.h" />
@@ -149,8 +151,10 @@
         <source-file src="src/ios/CallIncomingView.xib" />
         <source-file src="src/ios/CallIncomingView.m" />
         <header-file src="src/ios/CallIncomingView.h" />
-        <source-file src="src/ios/CallManager.swift" />
-        <source-file src="src/ios/AppManager.swift" /-->
+        <source-file src="src/ios/CallManager.m" />
+        <source-file src="src/ios/CallManager.h" />
+        <source-file src="src/ios/AppManager.m" />
+        <source-file src="src/ios/AppManager.h" /-->
     </platform>
 
 </plugin>

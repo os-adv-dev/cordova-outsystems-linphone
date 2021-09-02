@@ -1,30 +1,32 @@
 package com.outsystems.linphone;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import $appid.MainActivity;
 import $appid.R;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.linphone.core.Call;
 import org.linphone.core.Core;
 import org.linphone.core.CoreListenerStub;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import okhttp3.Response;
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.ANRequest;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.OkHttpResponseListener;
-
 
 public class CallActivity extends Activity {
 
@@ -51,11 +53,23 @@ public class CallActivity extends Activity {
                 }
                 Boolean outVideo = currIntent.getBooleanExtra("Video",false);
                 Boolean lowBandwidth = currIntent.getBooleanExtra("LowBandwidth",false);
+                if (outVideo){
+                    String[] videoDevices = Linphone.core.getVideoDevicesList();
+                    if (videoDevices.length>1){
+                        Linphone.core.setVideoDevice(videoDevices[1]);
+                    }
+                }
                 Linphone.outgoingCall(domain,outVideo,lowBandwidth);
                 OugoingCall();
                 break;
             case "Ringing":
                 Boolean inVideo = currIntent.getBooleanExtra("Video",false);
+                if (inVideo){
+                    String[] videoDevices = Linphone.core.getVideoDevicesList();
+                    if (videoDevices.length>1){
+                        Linphone.core.setVideoDevice(videoDevices[1]);
+                    }
+                }
                 IncomingCall(inVideo);
                 break;
             default:
@@ -93,6 +107,16 @@ public class CallActivity extends Activity {
                         break;
                     case UpdatedByRemote:
                         Log.d(Linphone.TAG,"UpdatedByRemote");
+                        boolean remoteVideo = false;
+                        if(call.getRemoteParams() != null){
+                            remoteVideo = call.getRemoteParams().videoEnabled();
+                        }
+                        boolean localVideo = call.getCurrentParams().videoEnabled();
+                        if(remoteVideo != localVideo){
+                            findViewById(R.id.toggle_video_button).setSelected(!findViewById(R.id.toggle_video_button).isSelected());
+                            Linphone.toggleVideo(remoteVideo);
+                            Toast.makeText(getApplicationContext(),"remote updated!",Toast.LENGTH_LONG).show();
+                        }
                         // When the remote requests a call update
                         break;
                     case Error:
@@ -302,8 +326,21 @@ public class CallActivity extends Activity {
     }
     public void toggleVideo(View view){
         view.setSelected(!view.isSelected());
+        if (getApplicationContext().checkSelfPermission(Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_DENIED){
+            requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
+        }
         Linphone.toggleVideo();
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            Linphone.core.reloadVideoDevices();
+        }
+    }
+
     public void toggleCamera(View view){
         Linphone.toggleCamera();
     }

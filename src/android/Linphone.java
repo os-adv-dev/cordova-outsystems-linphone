@@ -20,22 +20,17 @@
 package com.outsystems.linphone;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.*;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.PluginResult;
-import org.jetbrains.annotations.NotNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -125,7 +120,7 @@ public class Linphone extends CordovaPlugin {
                 return true;
             case "call":
                 if (args.getBoolean(1) && !cordova.hasPermission(Manifest.permission.CAMERA)){
-                    cordova.requestPermission(this,0,Manifest.permission.CAMERA);
+                    cordova.requestPermission(this,1,Manifest.permission.CAMERA);
                 }
                 Intent call = new Intent(cordova.getActivity(),CallActivity.class);
                 call.putExtra("Type","Call");
@@ -136,7 +131,7 @@ public class Linphone extends CordovaPlugin {
                 return true;
             case "receiveCall":
                 if (!cordova.hasPermission(Manifest.permission.CAMERA)){
-                    cordova.requestPermission(this,0,Manifest.permission.CAMERA);
+                    cordova.requestPermission(this,1,Manifest.permission.CAMERA);
                 }
                 Intent ringing = new Intent(cordova.getActivity(),CallActivity.class);
                 ringing.putExtra("Video",true);
@@ -175,6 +170,20 @@ public class Linphone extends CordovaPlugin {
         }
     }
 
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case 1:
+                Linphone.core.reloadVideoDevices();
+                break;
+            case 0:
+                Linphone.core.reloadSoundDevices();
+                break;
+            default:
+                break;
+        }
+    }
 
     public void setListeners(){
         Log.d(TAG,"Added Listeners!");
@@ -702,6 +711,33 @@ public class Linphone extends CordovaPlugin {
         }
     }
 
+    public static void toggleVideo(Boolean state) {
+        if (core.getCallsNb() == 0){
+            return;
+        }
+        Call curCall = (core.getCurrentCall() != null) ? core.getCurrentCall() : core.getCalls()[0];
+        if (curCall == null) {
+            return;
+        }
+
+        // To update the call, we need to create a new call params, from the call object this time
+        CallParams params = core.createCallParams(curCall);
+        // Here we toggle the video state (disable it if enabled, enable it if disabled)
+        // Note that we are using currentParams and not params or remoteParams
+        // params is the object you configured when the call was started
+        // remote params is the same but for the remote
+        // current params is the real params of the call, resulting of the mix of local & remote params
+        params.enableVideo(state);
+        if (state){
+            core.enableVideoCapture(true);
+            core.enableVideoDisplay(true);
+        }
+        // Finally we request the call update
+        curCall.update(params);
+
+        // Note that when toggling off the video, TextureViews will keep showing the latest frame displayed
+    }
+
     public static void toggleVideo() {
         if (core.getCallsNb() == 0){
             return;
@@ -719,6 +755,10 @@ public class Linphone extends CordovaPlugin {
         // remote params is the same but for the remote
         // current params is the real params of the call, resulting of the mix of local & remote params
         params.enableVideo(!curCall.getCurrentParams().videoEnabled());
+        if (!curCall.getCurrentParams().videoEnabled()){
+            core.enableVideoCapture(true);
+            core.enableVideoDisplay(true);
+        }
         // Finally we request the call update
         curCall.update(params);
 
