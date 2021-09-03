@@ -1,0 +1,23 @@
+{
+  "name": "cordova-outsystems-linphone",
+  "version": "1.0.0",
+  "description": "Cordova Device Plugin",
+  "cordova": {
+    "id": "cordova-outsystems-linphone",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "keywords": [
+    "cordova",
+    "linphone",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "Outsystems",
+  "dependencies": {
+    "adm-zip": "^0.4.13"
+  }
+}

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/numpad"
+    android:visibility="gone"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    app:flexWrap="wrap"
+    app:justifyContent="space_around"
+    app:alignItems="center"
+    android:background="#FFFFFF"
+    app:alignContent="space_around">
+
+    <ImageView
+        android:src="@drawable/numpad_one"
+        android:contentDescription="1"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+    <ImageView
+        android:contentDescription="2"
+        android:src="@drawable/numpad_two"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+    <ImageView
+        android:contentDescription="3"
+        android:src="@drawable/numpad_three"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        app:layout_wrapBefore="true"
+        android:src="@drawable/numpad_four"
+        android:contentDescription="4"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        android:src="@drawable/numpad_five"
+        android:contentDescription="5"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+    <ImageView
+        android:src="@drawable/numpad_six"
+        android:contentDescription="6"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        app:layout_wrapBefore="true"
+        android:src="@drawable/numpad_seven"
+        android:contentDescription="7"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+    <ImageView
+        android:src="@drawable/numpad_eight"
+        android:contentDescription="8"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        android:src="@drawable/numpad_nine"
+        android:contentDescription="9"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        app:layout_wrapBefore="true"
+        android:src="@drawable/numpad_star_digit"
+        android:contentDescription="*"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp" />
+
+    <ImageView
+        android:src="@drawable/numpad_zero"
+        android:contentDescription="0"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+    <ImageView
+        android:src="@drawable/numpad_sharp"
+        android:contentDescription="#"
+        android:onClick="handleKeypadClick"
+        android:layout_height="50dp"
+        android:layout_width="50dp"/>
+
+</com.google.android.flexbox.FlexboxLayout>

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+        <TextView
+            android:id="@+id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Incoming Call" />
+
+
+        <TextureView
+            android:id="@+id/remote_video_surface"
+            android:layout_below="@id/top_bar"
+            android:layout_above="@id/buttons"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+
+        <org.linphone.mediastream.video.capture.CaptureTextureView
+            android:id="@+id/local_preview_video_surface"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_alignParentEnd="true"
+            android:layout_above="@id/buttons"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layout_early"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/top_bar"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"
+            android:alpha="0.8"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/contact_name_early"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:paddingTop="10dp" />
+
+            <TextView
+                android:id="@+id/contact_number_early"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:singleLine="true"
+                android:paddingBottom="10dp" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_initials"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/top_bar"
+            android:layout_above="@id/buttons"
+            android:layout_centerHorizontal="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/contact_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/contact_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true" />
+
+                <RelativeLayout
+                    android:id="@+id/avatar"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="20dp">
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentLeft="true"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@null"
+                        android:src="@drawable/avatar"/>
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentLeft="true"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@null"
+                        android:src="@drawable/generated_avatar_bg" />
+
+                    <TextView
+                        android:id="@+id/initials"
+                        android:textColor="#f3f3f3"
+                        android:textSize="60sp"
+                        android:textStyle="bold"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentLeft="true"
+                        android:gravity="center"
+                        android:singleLine="true"
+                        android:ellipsize="none" />
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentLeft="true"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@null"
+                        android:src="@drawable/avatar_border" />
+                </RelativeLayout>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/call_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="300dp">
+
+                <View
+                    android:id="@+id/vertical_divider_2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_toStartOf="@id/vertical_divider_2">
+
+                    <View
+                        android:id="@+id/left_vertical_divider_2"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_centerHorizontal="true" />
+
+                        <ImageView
+                            android:id="@+id/toggle_video_button"
+                            android:onClick="toggleVideo"
+                            android:layout_alignParentBottom="true"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:layout_toStartOf="@id/left_vertical_divider_2"
+                            android:padding="20dp"
+                            android:src="@drawable/camera" />
+
+                    <ImageView
+                        android:id="@+id/pauseButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toEndOf="@id/left_vertical_divider_2"
+                        android:onClick="togglePause"
+                        android:padding="10dp"
+                        android:src="@drawable/call_pause" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_toEndOf="@id/vertical_divider_2">
+
+                    <View
+                        android:id="@+id/right_vertical_divider_2"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_centerHorizontal="true" />
+
+
+                    <ImageView
+                        android:id="@+id/custombutton1"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toStartOf="@id/right_vertical_divider_2"
+                        android:onClick="customButton1"
+                        android:padding="15dp"
+                        android:src="@drawable/custom1" />
+
+
+                    <ImageView
+                        android:id="@+id/custombutton2"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toEndOf="@id/right_vertical_divider_2"
+                        android:onClick="customButton2"
+                        android:padding="15dp"
+                        android:src="@drawable/custom2" />
+
+
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/ringing_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/decline_button"
+                    android:focusable="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:background="#ff0000"
+                    android:gravity="center"
+                    android:onClick="hangupCall"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:src="@drawable/call_hangup"
+                        android:contentDescription="Terminate the call"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/answer_button"
+                    android:focusable="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:background="#96c11f"
+                    android:gravity="center"
+                    android:onClick="answerCall"
+                    android:padding="12dp">
+
+
+                    <ImageView
+                        android:id="@+id/acceptIcon"
+                        android:src="@drawable/call_audio_start"
+                        android:contentDescription="Answer Call"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/calling_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/numbpad_button"
+                    android:onClick="toggleNumpadVisibility"
+                    android:contentDescription="Show Numpad"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/button_background_dark"
+                    android:padding="15dp"
+                    android:src="@drawable/call_numpad" />
+
+                <ImageView
+                    android:onClick="toggleMuteMicrophone"
+                    android:contentDescription="Toggle Microphone Mute"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="10dp"
+                    android:src="@drawable/micro" />
+
+                <ImageView
+                    android:onClick="toggleSpeaker"
+                    android:contentDescription="Toggle Speaker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:padding="15dp"
+                    android:src="@drawable/speaker" />
+
+                <ImageView
+                    android:onClick="hangupCall"
+                    android:contentDescription="Terminate Call"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.7"
+                    android:background="@color/call_hangup_background"
+                    android:padding="12dp"
+                    android:src="@drawable/call_hangup" />
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+        <include
+            layout="@layout/numpad"
+            android:layout_above="@id/buttons"
+            android:layout_below="@id/top_bar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true" />
+
+</RelativeLayout>
