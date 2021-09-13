@@ -47,6 +47,7 @@ public class Linphone extends CordovaPlugin {
     private static CallbackContext listenerCB;
     private CallbackContext callback;
     private static String proxyServer;
+    private JSONArray arguments;
 
     /**
      * Sets the context of the Command. This can then be used to do things like
@@ -120,14 +121,16 @@ public class Linphone extends CordovaPlugin {
                 return true;
             case "call":
                 if (args.getBoolean(1) && !cordova.hasPermission(Manifest.permission.CAMERA)){
+                    arguments = args;
                     cordova.requestPermission(this,1,Manifest.permission.CAMERA);
+                }else{
+                    Intent call = new Intent(cordova.getActivity(),CallActivity.class);
+                    call.putExtra("Type","Call");
+                    call.putExtra("Domain",args.getString(0));
+                    call.putExtra("Video",args.getBoolean(1));
+                    call.putExtra("LowBandwidth",args.getBoolean(2));
+                    cordova.getActivity().startActivity(call);
                 }
-                Intent call = new Intent(cordova.getActivity(),CallActivity.class);
-                call.putExtra("Type","Call");
-                call.putExtra("Domain",args.getString(0));
-                call.putExtra("Video",args.getBoolean(1));
-                call.putExtra("LowBandwidth",args.getBoolean(2));
-                cordova.getActivity().startActivity(call);
                 return true;
             case "receiveCall":
                 if (!cordova.hasPermission(Manifest.permission.CAMERA)){
@@ -176,6 +179,12 @@ public class Linphone extends CordovaPlugin {
         switch (requestCode){
             case 1:
                 Linphone.core.reloadVideoDevices();
+                Intent call = new Intent(cordova.getActivity(),CallActivity.class);
+                call.putExtra("Type","Call");
+                call.putExtra("Domain",arguments.getString(0));
+                call.putExtra("Video",arguments.getBoolean(1));
+                call.putExtra("LowBandwidth",arguments.getBoolean(2));
+                cordova.getActivity().startActivity(call);
                 break;
             case 0:
                 Linphone.core.reloadSoundDevices();
