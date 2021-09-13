@@ -162,15 +162,15 @@
                         android:layout_height="match_parent"
                         android:layout_centerHorizontal="true" />
 
-                        <ImageView
-                            android:id="@+id/toggle_video_button"
-                            android:onClick="toggleVideo"
-                            android:layout_alignParentBottom="true"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:layout_toStartOf="@id/left_vertical_divider_2"
-                            android:padding="20dp"
-                            android:src="@drawable/camera" />
+                    <ImageView
+                        android:id="@+id/toggle_video_button"
+                        android:onClick="toggleVideo"
+                        android:layout_alignParentBottom="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_toStartOf="@id/left_vertical_divider_2"
+                        android:padding="20dp"
+                        android:src="@drawable/camera_default" />
 
                     <ImageView
                         android:id="@+id/pauseButton"
@@ -180,7 +180,7 @@
                         android:layout_toEndOf="@id/left_vertical_divider_2"
                         android:onClick="togglePause"
                         android:padding="10dp"
-                        android:src="@drawable/call_pause" />
+                        android:src="@drawable/pause_default" />
 
                 </RelativeLayout>
 
@@ -287,7 +287,7 @@
                     android:layout_weight="1"
                     android:background="@color/button_background_dark"
                     android:padding="15dp"
-                    android:src="@drawable/call_numpad" />
+                    android:src="@drawable/footer_dialer" />
 
                 <ImageView
                     android:onClick="toggleMuteMicrophone"
@@ -296,7 +296,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:padding="10dp"
-                    android:src="@drawable/micro" />
+                    android:src="@drawable/micro_default" />
 
                 <ImageView
                     android:onClick="toggleSpeaker"
@@ -305,7 +305,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:padding="15dp"
-                    android:src="@drawable/speaker" />
+                    android:src="@drawable/route_speaker_default" />
 
                 <ImageView
                     android:onClick="hangupCall"

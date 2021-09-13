@@ -13,7 +13,7 @@
     app:alignContent="space_around">
 
     <ImageView
-        android:src="@drawable/numpad_one"
+        android:src="@drawable/numpad_1"
         android:contentDescription="1"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
@@ -21,35 +21,35 @@
 
     <ImageView
         android:contentDescription="2"
-        android:src="@drawable/numpad_two"
+        android:src="@drawable/numpad_2"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp"/>
 
     <ImageView
         android:contentDescription="3"
-        android:src="@drawable/numpad_three"
+        android:src="@drawable/numpad_3"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp" />
 
     <ImageView
         app:layout_wrapBefore="true"
-        android:src="@drawable/numpad_four"
+        android:src="@drawable/numpad_4"
         android:contentDescription="4"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp" />
 
     <ImageView
-        android:src="@drawable/numpad_five"
+        android:src="@drawable/numpad_5"
         android:contentDescription="5"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp"/>
 
     <ImageView
-        android:src="@drawable/numpad_six"
+        android:src="@drawable/numpad_6"
         android:contentDescription="6"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
@@ -57,21 +57,21 @@
 
     <ImageView
         app:layout_wrapBefore="true"
-        android:src="@drawable/numpad_seven"
+        android:src="@drawable/numpad_7"
         android:contentDescription="7"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp"/>
 
     <ImageView
-        android:src="@drawable/numpad_eight"
+        android:src="@drawable/numpad_8"
         android:contentDescription="8"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp" />
 
     <ImageView
-        android:src="@drawable/numpad_nine"
+        android:src="@drawable/numpad_9"
         android:contentDescription="9"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
@@ -79,21 +79,21 @@
 
     <ImageView
         app:layout_wrapBefore="true"
-        android:src="@drawable/numpad_star_digit"
+        android:src="@drawable/numpad_star"
         android:contentDescription="*"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp" />
 
     <ImageView
-        android:src="@drawable/numpad_zero"
+        android:src="@drawable/numpad_0"
         android:contentDescription="0"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
         android:layout_width="50dp"/>
 
     <ImageView
-        android:src="@drawable/numpad_sharp"
+        android:src="@drawable/numpad_hash"
         android:contentDescription="#"
         android:onClick="handleKeypadClick"
         android:layout_height="50dp"
