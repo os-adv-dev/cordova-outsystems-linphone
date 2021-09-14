@@ -716,6 +716,18 @@ public class Linphone extends CordovaPlugin {
         Call curCall = (core.getCurrentCall() != null) ? core.getCurrentCall() : core.getCalls()[0];
         if (curCall != null) {
             // Terminating a call is quite simple
+            curCall.decline(Reason.Declined);
+        }
+    }
+
+    public static void terminate() {
+        if (core.getCallsNb() == 0){
+            return;
+        }
+        // If the call state isn't paused, we can get it using core.currentCall
+        Call curCall = (core.getCurrentCall() != null) ? core.getCurrentCall() : core.getCalls()[0];
+        if (curCall != null) {
+            // Terminating a call is quite simple
             curCall.terminate();
         }
     }
@@ -803,6 +815,21 @@ public class Linphone extends CordovaPlugin {
         } else if (curCall.getState() != Call.State.Resuming) {
             // Otherwise let's resume it
             curCall.resume();
+        }
+    }
+
+    public static void callbackOS(String type, String state,String message){
+        PluginResult result;
+        JSONObject objReply;
+        try {
+            objReply = new JSONObject("{\"Type\":\""+type+"\",\"State\":\""+state+"\",\"Message\":\""+message+"\"}");
+            result = new PluginResult(PluginResult.Status.OK,objReply);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
+        }
+        if (listenerCB != null){
+            listenerCB.sendPluginResult(result);
         }
     }
 }

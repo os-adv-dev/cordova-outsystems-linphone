@@ -24,11 +24,52 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
+import com.outsystems.linphone.CallActivity;
+import com.outsystems.linphone.Linphone;
+
+import org.linphone.core.Address;
+import org.linphone.core.Call;
+import org.linphone.core.Reason;
+import org.linphone.core.tools.Log;
+
 public class PushBroadcastReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
-        Toast.makeText(context, "Push received with app shut down", Toast.LENGTH_LONG).show();
         // A push have been received but there was no Core alive, you should create it again
         // This way the core will register and it will handle the message or call event like if the app was started
+
+        if (intent.getAction().equals("org.linphone.HANGUP_CALL_ACTION") || intent.getAction().equals("org.linphone.ANSWER_CALL_ACTION")) {
+            handleCallIntent(context,intent);
+        }else{
+            Linphone.callbackOS("PushNotifications","Received",intent.getAction());
+        }
+    }
+
+    private void handleCallIntent(Context context,Intent intent) {
+        String remoteSipAddress = intent.getStringExtra("REMOTE_ADDRESS");
+        if (remoteSipAddress == null) {
+            Log.e("[Notification Broadcast Receiver] Remote SIP address is null for notification");
+            return;
+        }
+
+        if (intent.getAction().equals("org.linphone.ANSWER_CALL_ACTION")) {
+            Intent callActivity = new Intent(context,CallActivity.class);
+            callActivity.putExtra("remoteSipAddress",remoteSipAddress);
+            context.startActivity(callActivity);
+        } else {
+            Address remoteAdress = Linphone.core.interpretUrl(remoteSipAddress);
+
+            Call call = (remoteAdress != null) ? Linphone.core.getCallByRemoteAddress2(remoteAdress) : null;
+
+            if (call == null) {
+                Log.e("[Notification Broadcast Receiver] Couldn't find call from remote address $remoteSipAddress");
+                return;
+            }
+            if (call.getState() == Call.State.IncomingReceived || call.getState() == Call.State.IncomingEarlyMedia){
+                call.decline(Reason.Declined);
+            } else{
+                call.terminate();
+            }
+        }
     }
 }

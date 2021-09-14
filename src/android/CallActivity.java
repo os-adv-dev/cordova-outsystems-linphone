@@ -18,6 +18,7 @@ import $appid.R;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.linphone.core.Address;
 import org.linphone.core.Call;
 import org.linphone.core.Core;
 import org.linphone.core.CoreListenerStub;
@@ -27,6 +28,9 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.ANRequest;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.OkHttpResponseListener;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CallActivity extends Activity {
 
@@ -72,6 +76,10 @@ public class CallActivity extends Activity {
                 }
                 IncomingCall(inVideo);
                 break;
+            case "Answer":
+                String remoteSipAddress = currIntent.getStringExtra("remoteSipAddress");
+                answerCall(remoteSipAddress);
+
             default:
                 finish();
                 break;
@@ -288,8 +296,16 @@ public class CallActivity extends Activity {
         return initials;
     }
 
-    public void hangup(){
-        Linphone.hangUp();
+    public void hangup(int type){
+        switch (type){
+            case 0:
+                Linphone.hangUp();
+                break;
+            case 1:
+                Linphone.terminate();
+                break;
+        }
+
         Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
         startActivity(mainAct);
     }
@@ -315,6 +331,18 @@ public class CallActivity extends Activity {
     public void toggleSpeaker(View view) {
         view.setSelected(!view.isSelected());
         Linphone.toggleSpeaker();
+    }
+    public void answerCall(String remoteSipAddress) {
+
+        Address remoteAdress = Linphone.core.interpretUrl(remoteSipAddress);
+        Call call = (remoteAdress != null) ? Linphone.core.getCallByRemoteAddress2(remoteAdress) : null;
+        if (call == null) {
+            org.linphone.core.tools.Log.e("[Notification Broadcast Receiver] Couldn't find call from remote address "+remoteSipAddress);
+            return;
+        }
+        call.accept();
+        Call();
+
     }
 
     public void answerCall(View view) {
@@ -349,9 +377,20 @@ public class CallActivity extends Activity {
         Linphone.toggleCamera();
     }
     public void customButton1(View view){
-        //todo finish
         try {
             final JSONObject input = new JSONObject(Linphone.RESTInput);
+            int disconnectType = input.getInt("disconnectType");
+
+            int cooldownTime = input.getInt("cooldownTime");
+            view.setEnabled(false);
+            Timer t = new Timer("reenableCustomButton1", false);
+            t.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    view.setEnabled(true);
+                }
+            },cooldownTime);
+
             switch (input.getString("method")){
                 case "GET":
                     ANRequest.GetRequestBuilder getBuilder = AndroidNetworking.get(input.getString("url"));
@@ -365,12 +404,115 @@ public class CallActivity extends Activity {
                         public void onResponse(Response response) {
                             try {
                                 if (response.isSuccessful()){
-                                    Log.i(Linphone.TAG,input.getString("successMessage"));
-                                    Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
+                                    int successMessageType = input.getInt("successMessageType");
+                                    if (successMessageType == 0){
+                                        Log.i(Linphone.TAG,input.getString("successMessageSpec"));
+                                        Toast.makeText(getApplicationContext(),input.getString("successMessageSpec"),Toast.LENGTH_LONG).show();
+                                    }else{
+                                        String successMessageSpec = input.getString("successMessageSpec");
+                                        String[] successMessageFullPath = successMessageSpec.split("/");
+                                        JSONObject parentObject = new JSONObject(response.body().toString());
+                                        JSONArray parentArray = new JSONArray();
+                                        int lastParent = 0;
+                                        for (String successMessagePath : successMessageFullPath){
+                                            int begin = successMessagePath.indexOf("(");
+                                            int end = successMessagePath.indexOf(")");
+                                            String path = successMessagePath.substring(0,begin-1);
+                                            String type = successMessagePath.substring(begin+1,end-1);
+                                            switch (type){
+                                                case "Int":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
+                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "Bool":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "String":
+                                                    Log.i(Linphone.TAG,input.getString(path));
+                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "JsonObject":
+                                                    if (lastParent == 0){
+                                                        parentObject = parentObject.getJSONObject(path);
+                                                    }else{
+                                                        parentObject = parentArray.getJSONObject(Integer.parseInt(path));
+                                                    }
+                                                    lastParent = 0;
+                                                    break;
+                                                case "JsonArray":if (lastParent == 0){
+                                                    parentArray = parentObject.getJSONArray(path);
+                                                }else{
+                                                    parentArray = parentArray.getJSONArray(Integer.parseInt(path));
+                                                }
+                                                    lastParent = 1;
+                                                    break;
+                                                case "Long":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if(disconnectType == 1 || disconnectType == 3){
+                                        hangup(0);
+                                    }
+
 
                                 }else{
-                                    Log.e(Linphone.TAG,input.getString("failMessage"));
-                                    Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                                    int failMessageType = input.getInt("failMessageType");
+                                    if (failMessageType == 0){
+                                        Log.i(Linphone.TAG,input.getString("failMessageSpec"));
+                                        Toast.makeText(getApplicationContext(),input.getString("failMessageSpec"),Toast.LENGTH_LONG).show();
+                                    }else{
+                                        String failMessageSpec = input.getString("failMessageSpec");
+                                        String[] failMessageFullPath = failMessageSpec.split("/");
+                                        JSONObject parentObject = new JSONObject(response.body().toString());
+                                        JSONArray parentArray = new JSONArray();
+                                        int lastParent = 0;
+                                        for (String failMessagePath : failMessageFullPath){
+                                            int begin = failMessagePath.indexOf("(");
+                                            int end = failMessagePath.indexOf(")");
+                                            String path = failMessagePath.substring(0,begin-1);
+                                            String type = failMessagePath.substring(begin+1,end-1);
+                                            switch (type){
+                                                case "Int":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
+                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "Bool":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "String":
+                                                    Log.i(Linphone.TAG,input.getString(path));
+                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "JsonObject":
+                                                    if (lastParent == 0){
+                                                        parentObject = parentObject.getJSONObject(path);
+                                                    }else{
+                                                        parentObject = parentArray.getJSONObject(Integer.parseInt(path));
+                                                    }
+                                                    lastParent = 0;
+                                                    break;
+                                                case "JsonArray":if (lastParent == 0){
+                                                    parentArray = parentObject.getJSONArray(path);
+                                                }else{
+                                                    parentArray = parentArray.getJSONArray(Integer.parseInt(path));
+                                                }
+                                                    lastParent = 1;
+                                                    break;
+                                                case "Long":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if(disconnectType == 2 || disconnectType == 3){
+                                        hangup(0);
+                                    }
                                 }
                             } catch (JSONException e) {
                                 Log.e(Linphone.TAG,e.getLocalizedMessage());
@@ -393,17 +535,128 @@ public class CallActivity extends Activity {
                         JSONObject header = headers.getJSONObject(i);
                         postBuilder.addHeaders(header.getString("key"),header.getString("value"));
                     }
+                    switch (input.getInt("bodyType")){
+                        case 0:
+                            postBuilder.addJSONObjectBody(input.getJSONObject("body"));
+                            break;
+                        case 1:
+                            postBuilder.addJSONArrayBody(input.getJSONArray("body"));
+                            break;
+                    }
                     postBuilder.build().getAsOkHttpResponse(new OkHttpResponseListener() {
                         @Override
                         public void onResponse(Response response) {
                             try {
                                 if (response.isSuccessful()){
-                                    Log.i(Linphone.TAG,input.getString("successMessage"));
-                                    Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
+                                    int successMessageType = input.getInt("successMessageType");
+                                    if (successMessageType == 0){
+                                        Log.i(Linphone.TAG,input.getString("successMessageSpec"));
+                                        Toast.makeText(getApplicationContext(),input.getString("successMessageSpec"),Toast.LENGTH_LONG).show();
+                                    }else{
+                                        String successMessageSpec = input.getString("successMessageSpec");
+                                        String[] successMessageFullPath = successMessageSpec.split("/");
+                                        JSONObject parentObject = new JSONObject(response.body().toString());
+                                        JSONArray parentArray = new JSONArray();
+                                        int lastParent = 0;
+                                        for (String successMessagePath : successMessageFullPath){
+                                            int begin = successMessagePath.indexOf("(");
+                                            int end = successMessagePath.indexOf(")");
+                                            String path = successMessagePath.substring(0,begin-1);
+                                            String type = successMessagePath.substring(begin+1,end-1);
+                                            switch (type){
+                                                case "Int":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
+                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "Bool":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "String":
+                                                    Log.i(Linphone.TAG,input.getString(path));
+                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "JsonObject":
+                                                    if (lastParent == 0){
+                                                        parentObject = parentObject.getJSONObject(path);
+                                                    }else{
+                                                        parentObject = parentArray.getJSONObject(Integer.parseInt(path));
+                                                    }
+                                                    lastParent = 0;
+                                                    break;
+                                                case "JsonArray":if (lastParent == 0){
+                                                    parentArray = parentObject.getJSONArray(path);
+                                                }else{
+                                                    parentArray = parentArray.getJSONArray(Integer.parseInt(path));
+                                                }
+                                                    lastParent = 1;
+                                                    break;
+                                                case "Long":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if(disconnectType == 1 || disconnectType == 3){
+                                        hangup(0);
+                                    }
+
 
                                 }else{
-                                    Log.e(Linphone.TAG,input.getString("failMessage"));
-                                    Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                                    int failMessageType = input.getInt("failMessageType");
+                                    if (failMessageType == 0){
+                                        Log.i(Linphone.TAG,input.getString("failMessageSpec"));
+                                        Toast.makeText(getApplicationContext(),input.getString("failMessageSpec"),Toast.LENGTH_LONG).show();
+                                    }else{
+                                        String failMessageSpec = input.getString("failMessageSpec");
+                                        String[] failMessageFullPath = failMessageSpec.split("/");
+                                        JSONObject parentObject = new JSONObject(response.body().toString());
+                                        JSONArray parentArray = new JSONArray();
+                                        int lastParent = 0;
+                                        for (String failMessagePath : failMessageFullPath){
+                                            int begin = failMessagePath.indexOf("(");
+                                            int end = failMessagePath.indexOf(")");
+                                            String path = failMessagePath.substring(0,begin-1);
+                                            String type = failMessagePath.substring(begin+1,end-1);
+                                            switch (type){
+                                                case "Int":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
+                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "Bool":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "String":
+                                                    Log.i(Linphone.TAG,input.getString(path));
+                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    break;
+                                                case "JsonObject":
+                                                    if (lastParent == 0){
+                                                        parentObject = parentObject.getJSONObject(path);
+                                                    }else{
+                                                        parentObject = parentArray.getJSONObject(Integer.parseInt(path));
+                                                    }
+                                                    lastParent = 0;
+                                                    break;
+                                                case "JsonArray":if (lastParent == 0){
+                                                    parentArray = parentObject.getJSONArray(path);
+                                                }else{
+                                                    parentArray = parentArray.getJSONArray(Integer.parseInt(path));
+                                                }
+                                                    lastParent = 1;
+                                                    break;
+                                                case "Long":
+                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if(disconnectType == 2 || disconnectType == 3){
+                                        hangup(0);
+                                    }
                                 }
                             } catch (JSONException e) {
                                 Log.e(Linphone.TAG,e.getLocalizedMessage());
@@ -455,6 +708,10 @@ public class CallActivity extends Activity {
 
 
     public void hangupCall(View view) {
-        hangup();
+        hangup(1);
+    }
+
+    public void TerminateCall(View view) {
+        hangup(0);
     }
 }
