@@ -9,7 +9,7 @@
         <clobbers target="linphone" />
     </js-module>
     <hook type="before_plugin_install" src="hooks/outsystems/handle_google_services.js" />
-    <hook type="after_plugin_install" src="hooks/outsystems/google_services_cleanup.js" />
+    <!--<hook type="after_plugin_install" src="hooks/outsystems/google_services_cleanup.js" />-->
     <!-- android -->
     <platform name="android">
 
@@ -107,6 +107,7 @@
         <resource-file src="src/android/drawable/custom2.png" target="res/drawable/custom2.png" />
         <resource-file src="src/android/drawable/pause_default.png" target="res/drawable/pause_default.png" />
         
+        <resource-file src="src/android/values/colors.xml" target="res/values/colors.xml" />
         
     </platform>
 
