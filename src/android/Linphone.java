@@ -573,12 +573,15 @@ public class Linphone extends CordovaPlugin {
         address.setTransport(type);
         params.setServerAddress(address);
         params.setRegisterEnabled(true);
+        params.setPushNotificationAllowed(true);
+        params.setRemotePushNotificationAllowed(true);
 
         // Ensure push notification is enabled for this account
         params.setPushNotificationAllowed(true);
 
         core.addAuthInfo(authInfo);
         Account account = core.createAccount(params);
+
         core.addAccount(account);
 
         core.setDefaultAccount(account);
