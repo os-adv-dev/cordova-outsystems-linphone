@@ -8,8 +8,8 @@
     <js-module src="www/linphone.js" name="linphone">
         <clobbers target="linphone" />
     </js-module>
-    <!--hook type="before_plugin_install" src="hooks/outsystems/handle_google_services.js" />
-    <hook type="after_plugin_install" src="hooks/outsystems/google_services_cleanup.js" /-->
+    <hook type="before_plugin_install" src="hooks/outsystems/handle_google_services.js" />
+    <hook type="after_plugin_install" src="hooks/outsystems/google_services_cleanup.js" />
     <!-- android -->
     <platform name="android">
 
@@ -24,17 +24,17 @@
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <activity android:exported="true" android:launchMode="singleTop" android:name="com.outsystems.linphone.CallActivity" />
             <!-- The following is mandatory to have our SDK to handle push automatically -->
-            <!--service android:name="org.linphone.core.tools.firebase.FirebaseMessaging" android:exported="false">
+            <service android:name="org.linphone.core.tools.firebase.FirebaseMessaging" android:exported="false">
                 <intent-filter>
                     <action android:name="com.google.firebase.MESSAGING_EVENT" />
                 </intent-filter>
-            </service-->
-            <!-- This is to handle the PUSH_RECEIVED broadcast emitted by our SDK upon push reception >
+            </service>
+            <!-- This is to handle the PUSH_RECEIVED broadcast emitted by our SDK upon push reception -->
             <receiver android:name="com.outsystems.linphone.pushnotifications.PushBroadcastReceiver">
                 <intent-filter>
                     <action android:name="org.linphone.core.action.PUSH_RECEIVED"/>
                 </intent-filter>
-            </receiver-->
+            </receiver>
             <!-- The following isn't mandatory but having a foreground service prevents Android to kill the app during a call -->
             <!-- You can create your own service that inherits from this class for simplicity or handle the foreground service yourself -->
             <service android:name="org.linphone.core.tools.service.CoreService" android:foregroundServiceType="phoneCall|camera|microphone" android:stopWithTask="false" />
@@ -42,7 +42,7 @@
         </config-file>
 
 
-        <!--source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" /-->
+        <source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" />
         <source-file src="src/android/Linphone.java" target-dir="src/com/outsystems/linphone" />
         <source-file src="src/android/CallActivity.java" target-dir="src/com/outsystems/linphone" />
         
