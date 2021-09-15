@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:state_pressed="true"
-		android:drawable="#808080" />
+		android:drawable="@color/grey_color" />
 	<item android:state_enabled="false"
-		android:drawable="#444444" />
+		android:drawable="@color/dark_grey_color" />
 	<item android:state_selected="true"
-		android:drawable="#444444" />
+		android:drawable="@color/dark_grey_color" />
 	<item
-		android:drawable="#444444" />
+		android:drawable="@color/dark_grey_color" />
 </selector>
