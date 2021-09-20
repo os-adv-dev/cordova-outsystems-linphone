@@ -11,41 +11,117 @@ import linphonesw
 import PushKit
 
 var login: Bool = false
-@objc(Linphone) class Linphone: CDVPlugin,CoreDelegate,LoggingServiceDelegate {
+@objc(Linphone) class Linphone: CDVPlugin,CoreDelegate,LoggingServiceDelegate,IncomingCallViewDelegate {
+    func incomingCallAccepted(_ call: OpaquePointer!, evenWithVideo video: Bool) {
+        CallManager.instance().acceptCall(call: call, hasVideo: video)
+    }
+    
+    func incomingCallDeclined(_ call: OpaquePointer!) {
+        CallManager.instance().terminateCall(call: call)
+    }
+    
+    func incomingCallAborted(_ call: OpaquePointer!) {
+    }
+    
     
     var lc: Core!
     var proxy_cfg: ProxyConfig!
     var call: Call!
     var mIterateTimer: Timer?
+    var mCallbackListener: String = ""
+    var proxyServer: String = ""
+    var callIncomingView: CallIncomingView!
+    var callView: CallView!
+    var callOutgoingView: CallOutgoingView!
         
     override func pluginInitialize() {
-        do{
-        lc = try Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
-        }catch{
-            print(error)
+        
+        if (lc != nil) {
+            print("linphonecore is already created!");
+            return;
         }
-    }
-    
-    
-    @objc func iterate() {
-        lc.iterate()
-    }
+        
+        lc = try! Factory.Instance.createCore(configPath: "", factoryConfigPath: "", systemContext: nil)
+        
+        //lc.pushNotificationEnabled = true
+        lc.videoCaptureEnabled = true;
+        lc.videoDisplayEnabled = true;
+        
+        try! lc.start()
+        
+        
+        CallManager.instance().setCore(core:lc.getCobject!);
+        
+        lc.addDelegate(delegate: self)
+        
 
-    func startIterateTimer() {
-        if (mIterateTimer?.isValid ?? false) {
-            print("Iterate timer is already started, skipping ...")
-            return
+
+        /* Set audio assets
+        NSString *ring =
+            ([LinphoneManager bundleFile:[self lpConfigStringForKey:@"local_ring" inSection:@"sound"].lastPathComponent]
+             ?: [LinphoneManager bundleFile:@"notes_of_the_optimistic.caf"])
+            .lastPathComponent;
+        NSString *ringback =
+            ([LinphoneManager bundleFile:[self lpConfigStringForKey:@"remote_ring" inSection:@"sound"].lastPathComponent]
+             ?: [LinphoneManager bundleFile:@"ringback.wav"])
+            .lastPathComponent;
+        NSString *hold =
+            ([LinphoneManager bundleFile:[self lpConfigStringForKey:@"hold_music" inSection:@"sound"].lastPathComponent]
+             ?: [LinphoneManager bundleFile:@"hold.mkv"])
+            .lastPathComponent;
+        [self lpConfigSetString:[LinphoneManager bundleFile:ring] forKey:@"local_ring" inSection:@"sound"];
+        [self lpConfigSetString:[LinphoneManager bundleFile:ringback] forKey:@"remote_ring" inSection:@"sound"];
+        [self lpConfigSetString:[LinphoneManager bundleFile:hold] forKey:@"hold_music" inSection:@"sound"];
+
+        
+        [LinphoneManager.instance startLinphoneCore];
+
+        // Load plugins if available in the linphone SDK - otherwise these calls will do nothing
+        MSFactory *f = linphone_core_get_ms_factory(theLinphoneCore);
+        libmssilk_init(f);
+        libmsamr_init(f);
+        libmsx264_init(f);
+        libmsopenh264_init(f);
+        libmswebrtc_init(f);
+        libmscodec2_init(f);
+
+        linphone_core_reload_ms_plugins(theLinphoneCore, NULL);
+        [self migrationAllPost];
+
+        /* Use the rootca from framework, which is already set*/
+        //linphone_core_set_root_ca(theLinphoneCore, [LinphoneManager bundleFile:@"rootca.pem"].UTF8String);
+        linphone_core_set_user_certificates_path(theLinphoneCore, linphone_factory_get_data_dir(linphone_factory_get(), kLinphoneMsgNotificationAppGroupId.UTF8String));
+
+        /* The core will call the linphone_iphone_configuring_status_changed callback when the remote provisioning is loaded
+           (or skipped).
+           Wait for this to finish the code configuration */
+
+        
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        BOOL bAudioInputAvailable = audioSession.inputAvailable;
+        NSError *err = nil;
+
+        if (![audioSession setActive:NO error:&err] && err) {
+            //LOGE(@"audioSession setActive failed: %@", [err description]);
+            err = nil;
         }
-        mIterateTimer = Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(self.iterate), userInfo: nil, repeats: true)
-        print("start iterate timer")
+        if (!bAudioInputAvailable) {
+            UIAlertController *errView = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"No microphone", nil)
+                              message:NSLocalizedString(@"You need to plug a microphone to your device to use the application.", nil)
+                              preferredStyle:UIAlertControllerStyleAlert];
 
-    }
+            UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
+                            style:UIAlertActionStyleDefault
+                            handler:^(UIAlertAction * action) {}];
 
-    func stopIterateTimer() {
-        if let timer = mIterateTimer {
-            print("stop iterate timer")
-            timer.invalidate()
+            [errView addAction:defaultAction];
+            //[PhoneMainView.instance presentViewController:errView animated:YES completion:nil];
         }
+
+        if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+            // go directly to bg mode
+            [self enterBackgroundMode];
+        }*/
     }
     
     @objc(connect:)func connect(command : CDVInvokedUrlCommand){
@@ -62,31 +138,53 @@ var login: Bool = false
         let domain = command.argument(at: 5) as! String
         let algorithm = command.argument(at: 6)
         let proxy = command.argument(at: 7) as! String
+        let transportTypeString = command.argument(at: 8) as! String
+        
+        var transportType:TransportType
+        switch transportTypeString {
+        case "TCP":
+            transportType = TransportType.Tcp;
+        case "UDP":
+            transportType = TransportType.Udp;
+        default:
+            transportType = TransportType.Tls;
+        }
         
         
         let factory = Factory.Instance
         do {
-            lc.addDelegate(delegate: self)
-            try! lc.start()
+            //lc.addDelegate(delegate: self)
+            //try! lc.start()
             /*create proxy config*/
-            proxy_cfg = try lc.createProxyConfig()
-            /*parse identity*/
-            let from = try factory.createAddress(addr: username)
-            if (password != nil){
-                let info = try factory.createAuthInfo(username: from.username, userid: "", passwd: password, ha1: "", realm: "", domain: domain) /*create authentication structure from identity*/
-                lc!.addAuthInfo(info: info) /*add authentication info to LinphoneCore*/
-            }
-            // configure proxy entries
-            try proxy_cfg.setIdentityaddress(newValue: from) /*set identity with user name and domain*/
-            try proxy_cfg.setServeraddr(newValue: proxy) /* we assume domain = proxy server address*/
-            proxy_cfg.registerEnabled = true /*activate registration for this proxy config*/
+            //proxy_cfg = try lc.createProxyConfig()
             
-            try lc.addProxyConfig(config: proxy_cfg!) /*add proxy config to linphone core*/
-            lc.defaultProxyConfig = proxy_cfg /*set to default proxy*/
+            let authInfo = try factory.createAuthInfo(username: username, userid: "", passwd: password, ha1: "", realm: "", domain: domain) /*create authentication structure from identity*/
+            
+            let params = try lc.createAccountParams()
+            
+            /*parse identity*/
+            let identity = try factory.createAddress(addr: "sip:"+username+"@"+domain)
+            
+            try params.setIdentityaddress(newValue: identity)
+            
+            proxyServer = proxy;
+            
+            let address = try factory.createAddress(addr: "sip:"+proxy+";transport="+transportTypeString.lowercased())
+            try address.setTransport(newValue: transportType)
+            try params.setServeraddress(newValue: address)
+            params.registerEnabled = true;
+            //params.pushNotificationAllowed = true;
+            //params.remotePushNotificationAllowed = true;
+            
+            lc.addAuthInfo(info: authInfo)
+            
+            let account = try lc.createAccount(params: params)
+            try lc.addAccount(account: account)
+            lc.defaultAccount = account
             
             login = true
+            
             /* main loop for receiving notifications and doing background linphonecore work: */
-            startIterateTimer()
         } catch {
             print(error)
         }
@@ -94,6 +192,19 @@ var login: Bool = false
     
     @objc(disconnect:)func disconnect(command : CDVInvokedUrlCommand){
         if (login) {
+            // Here we will disable the registration of our Account
+            let account = lc.defaultAccount
+            if account == nil {
+                return
+            }
+            let params = account?.params
+            
+            let clonedParams = params?.clone()
+            
+            clonedParams?.registerEnabled = false;
+            
+            account?.params = clonedParams
+            /*
             proxy_cfg.edit() /*start editing proxy configuration*/
             proxy_cfg.registerEnabled = false /*de-activate registration for this proxy config*/
             do {
@@ -105,13 +216,25 @@ var login: Bool = false
             while(proxy_cfg!.state !=  RegistrationState.Cleared){
                 lc.iterate() /*to make sure we receive call backs before shutting down*/
                 usleep(50000)
-            }
-
-            stopIterateTimer()
-            lc.removeDelegate(delegate: self)
-            lc.stop()
+            }*/
         }
     }
+    
+    @objc(delete:)func delete(command : CDVInvokedUrlCommand){
+        // To completely remove an Account
+        let account = lc.defaultAccount;
+        if (account == nil) {
+            return;
+        }
+        lc.removeAccount(account: account!)
+
+        // To remove all accounts use
+        lc.clearAccounts();
+
+        // Same for auth info
+        lc.clearAllAuthInfo();
+    }
+    
     @objc(call:)func call(command : CDVInvokedUrlCommand){
         #if DEBUG_LOGS
         let log = LoggingService.Instance /*enable liblinphone logs.*/
@@ -120,26 +243,39 @@ var login: Bool = false
         Factory.Instance.enableLogCollection(state: LogCollectionState.Enabled)
         #endif
         
-        let dest = command.argument(at: 0) as! String
-        try! lc.start()
-            
-        if (dest != nil){
-            /*
-            Place an outgoing call
-            */
-            call = lc.invite(url: dest)
-            if (call == nil) {
-                print("Could not place call to \(dest ?? "")\n")
-            } else {
-                print("Call to  \(dest ?? "") is in progress...")
+        var domain = command.argument(at: 0) as! String
+        let isVideo = command.argument(at: 1) as! Bool
+        let isLowBandwidth = command.argument(at: 2) as! Bool
+        
+        if proxyServer != "" {
+            domain = domain.components(separatedBy: "@")[0]
+            domain = domain + "@" + proxyServer
+        }
+        let remoteAddress = try? Factory.Instance.createAddress(addr: "sip:"+domain)
+        
+        if remoteAddress == nil {
+            return;
+        }
+        if lc.defaultAccount != nil {
+            let localAddr = lc.defaultAccount?.contactAddress
+            if localAddr != nil {
+                try! remoteAddress?.setTransport(newValue: localAddr!.transport)
             }
         }
         
-        startIterateTimer()
+        // For OutgoingCall, show CallOutgoingView
+        if lc != nil {
+            CallManager.instance().setCore(core: lc.getCobject!)
+            try! CallManager.instance().doCall(addr: remoteAddress!, isSas: false, isLowBandwidth:isLowBandwidth, isVideo:isVideo)
+            
+            callOutgoingView = CallOutgoingView()
+            viewController.present(callOutgoingView, animated: true, completion: nil)
+        }else{
+            print("Core not initialized!")
+        }
     }
     
     @objc(hangup:)func hangup(command : CDVInvokedUrlCommand) {
-        stopIterateTimer()
         if (self.call != nil && self.call!.state != Call.State.End){
             /* terminate the call */
             print("Terminating the call...\n")
@@ -153,13 +289,15 @@ var login: Bool = false
     }
     
     func onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
-        print("New registration state \(cstate) for user id \( String(describing: cfg.identityAddress?.asString()))\n")
+        
     }
-    func onLogMessageWritten(logService: LoggingService, domain: String, lev: LogLevel, message: String) {
-        print("Logging service log: \(message)s\n")
+    
+    func onRegistrationStateChanged(core: Core, proxyConfig: ProxyConfig, state: RegistrationState, message: String) {
+        print("New registration state \(state) for user id \( String(describing: proxyConfig.identityAddress?.asString()))\n")
     }
-    func onCallStateChanged(lc: Core, call: Call, cstate: Call.State, message: String) {
-        switch cstate {
+    
+    func onCallStateChanged(core: Core, call: Call, state: Call.State, message: String) {
+        switch state {
         case .OutgoingRinging:
             print("It is now ringing remotely !\n")
         case .OutgoingEarlyMedia:
@@ -168,12 +306,49 @@ var login: Bool = false
             print("We are connected !\n")
         case .StreamsRunning:
             print("Media streams established !\n")
+            if(callView == nil){
+                if callIncomingView != nil {
+                    callIncomingView.dismiss(animated: true, completion: nil)
+                    callIncomingView = nil
+                }else if callOutgoingView != nil{
+                    callOutgoingView.dismiss(animated: true, completion: nil)
+                    callOutgoingView = nil
+                }
+                callView = CallView()
+                viewController.present(callView, animated: true, completion: nil)
+            }
         case .End:
+            if callIncomingView != nil {
+                callIncomingView.dismiss(animated: true, completion: nil)
+                callIncomingView = nil
+            }else if callView != nil{
+                callView.dismiss(animated: true, completion: nil)
+                callView = nil
+            }else if callOutgoingView != nil{
+                callOutgoingView.dismiss(animated: true, completion: nil)
+                callOutgoingView = nil
+            }
             print("Call is terminated.\n")
         case .Error:
+            if callIncomingView != nil {
+                callIncomingView.dismiss(animated: true, completion: nil)
+                callIncomingView = nil
+            }else if callView != nil{
+                callView.dismiss(animated: true, completion: nil)
+                callView = nil
+            }else if callOutgoingView != nil{
+                callOutgoingView.dismiss(animated: true, completion: nil)
+                callOutgoingView = nil
+            }
             print("Call failure !")
+        case .IncomingReceived:
+            callIncomingView = CallIncomingView()
+            callIncomingView.delegate = self
+            callIncomingView.call = core.currentCall?.getCobject
+            viewController.present(callIncomingView, animated: true, completion: nil)
+            print("It is now ringing localy!\n")
         default:
-            print("Unhandled notification \(cstate)\n")
+            print("Unhandled notification \(state)\n")
         }
     }
     

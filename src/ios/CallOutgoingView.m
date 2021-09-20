@@ -18,35 +18,14 @@
  */
 
 #import "CallOutgoingView.h"
-#import "PhoneMainView.h"
+#import "Utils.h"
+#import "Linphone_Sample_app-Swift.h"
+//#import "PhoneMainView.h"
 
 @implementation CallOutgoingView
 
-#pragma mark - UICompositeViewDelegate Functions
-
-static UICompositeViewDescription *compositeDescription = nil;
-
-+ (UICompositeViewDescription *)compositeViewDescription {
-	if (compositeDescription == nil) {
-		compositeDescription = [[UICompositeViewDescription alloc] init:self.class
-															  statusBar:StatusBarView.class
-																 tabBar:nil
-															   sideMenu:CallSideMenuView.class
-															 fullscreen:false
-														 isLeftFragment:NO
-														   fragmentWith:nil];
-
-		compositeDescription.darkBackground = true;
-	}
-	return compositeDescription;
-}
-
-- (UICompositeViewDescription *)compositeViewDescription {
-	return self.class.compositeViewDescription;
-}
-
 - (void)viewDidLoad {
-	_routesEarpieceButton.enabled = !IPAD;
+	_routesEarpieceButton.enabled = YES;
 	
 	[_zeroButton setDigit:'0'];
 	[_zeroButton setDtmf:true];
@@ -80,26 +59,26 @@ static UICompositeViewDescription *compositeDescription = nil;
 
 	[NSNotificationCenter.defaultCenter addObserver:self
 										   selector:@selector(bluetoothAvailabilityUpdateEvent:)
-											   name:kLinphoneBluetoothAvailabilityUpdate
+											   name:@"LinphoneBluetoothAvailabilityUpdate"
 											 object:nil];
 	
 	[NSNotificationCenter.defaultCenter addObserver:self
 										   selector:@selector(callUpdateEvent:)
-											   name:kLinphoneCallUpdate
+											   name:@"LinphoneCallUpdate"
 											 object:nil];
 
-	LinphoneCall *call = linphone_core_get_current_call(LC);
+	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
 	if (!call) {
 		return;
 	}
 
 	const LinphoneAddress *addr = linphone_call_get_remote_address(call);
-	[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr withAddressLabel:_addressLabel];
+	//[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr withAddressLabel:_addressLabel];
 	char *uri = linphone_address_as_string_uri_only(addr);
 	ms_free(uri);
-	[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:NO withRoundedRadius:YES];
+	//[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:NO withRoundedRadius:YES];
 
-	[self hideSpeaker:LinphoneManager.instance.bluetoothAvailable];
+	[self hideSpeaker:[[CallManager instance] isBluetoothAvailable]];
 
 	[_speakerButton update];
 	[_microButton update];
@@ -115,8 +94,9 @@ static UICompositeViewDescription *compositeDescription = nil;
 	// before popping current view, because UICompositeView cannot handle view change
 	// directly in viewWillAppear (this would lead to crash in deallocated memory - easily
 	// reproductible on iPad mini).
-	if (!linphone_core_get_current_call(LC)) {
-		[PhoneMainView.instance popCurrentView];
+	if (!linphone_core_get_current_call([[CallManager instance] getCore])) {
+        //TODO goBack to OS Screen
+		//[PhoneMainView.instance popCurrentView];
 	}
 }
 
@@ -142,25 +122,26 @@ static UICompositeViewDescription *compositeDescription = nil;
 
 - (IBAction)onRoutesClick:(id)sender {
 	if ([_routesView isHidden]) {
-		[self hideRoutes:FALSE animated:ANIMATED];
+		[self hideRoutes:FALSE animated:YES];
 	} else {
-		[self hideRoutes:TRUE animated:ANIMATED];
+		[self hideRoutes:TRUE animated:YES];
 	}
 }
 
 - (IBAction)onNumpadClick:(id)sender {
 	if ([_numpadView isHidden]) {
-		[self hidePad:FALSE animated:ANIMATED];
+		[self hidePad:FALSE animated:YES];
 	} else {
-		[self hidePad:TRUE animated:ANIMATED];
+		[self hidePad:TRUE animated:YES];
 	}
 }
 
 - (IBAction)onDeclineClick:(id)sender {
-	LinphoneCall *call = linphone_core_get_current_call(LC);
+	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
 	if (call) {
 		[CallManager.instance terminateCallWithCall:call];
 	}
+    //[self dismissViewControllerAnimated:YES completion: nil];
 }
 
 - (void)hidePad:(BOOL)hidden animated:(BOOL)animated {

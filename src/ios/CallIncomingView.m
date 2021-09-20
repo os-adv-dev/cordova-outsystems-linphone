@@ -18,10 +18,11 @@
  */
 
 #import "CallIncomingView.h"
-#import "LinphoneManager.h"
-#import "FastAddressBook.h"
-#import "PhoneMainView.h"
+//#import "FastAddressBook.h"
+//#import "PhoneMainView.h"
 #import "Utils.h"
+#import "Linphone_Sample_app-Swift.h"
+#import "CallView.h"
 
 @implementation CallIncomingView
 
@@ -32,43 +33,21 @@
 
 	[NSNotificationCenter.defaultCenter addObserver:self
 										   selector:@selector(callUpdateEvent:)
-											   name:kLinphoneCallUpdate
+											   name:@"LinphoneCallUpdate"
 											 object:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
 	[super viewWillDisappear:animated];
-	[NSNotificationCenter.defaultCenter removeObserver:self name:kLinphoneCallUpdate object:nil];
+	[NSNotificationCenter.defaultCenter removeObserver:self name:@"LinphoneCallUpdate" object:nil];
 	_call = NULL;
-}
-
-#pragma mark - UICompositeViewDelegate Functions
-
-static UICompositeViewDescription *compositeDescription = nil;
-
-+ (UICompositeViewDescription *)compositeViewDescription {
-	if (compositeDescription == nil) {
-		compositeDescription = [[UICompositeViewDescription alloc] init:self.class
-															  statusBar:StatusBarView.class
-																 tabBar:nil
-															   sideMenu:CallSideMenuView.class
-															 fullscreen:false
-														 isLeftFragment:YES
-														   fragmentWith:nil];
-		compositeDescription.darkBackground = true;
-	}
-	return compositeDescription;
-}
-
-- (UICompositeViewDescription *)compositeViewDescription {
-	return self.class.compositeViewDescription;
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
 	[super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-	if (_earlyMedia && [LinphoneManager.instance lpConfigBoolForKey:@"pref_accept_early_media"] && linphone_core_get_calls_nb(LC) < 2) {
+	if (_earlyMedia && linphone_core_get_calls_nb([[CallManager instance] getCore]) < 2) {
 		_earlyMediaView.hidden = NO;
-		linphone_core_set_native_video_window_id(LC, (__bridge void *)(_earlyMediaView));
+		linphone_core_set_native_video_window_id([[CallManager instance] getCore], (__bridge void *)(_earlyMediaView));
 	}
 	if (_call) {
 		[self update];
@@ -83,26 +62,27 @@ static UICompositeViewDescription *compositeDescription = nil;
 	[self callUpdate:acall state:astate];
 }
 
+//TODO add auto_answer
 - (void)callUpdate:(LinphoneCall *)acall state:(LinphoneCallState)astate {
 	if (_call == acall && (astate == LinphoneCallEnd || astate == LinphoneCallError)) {
 		[_delegate incomingCallAborted:_call];
-	} else if ([LinphoneManager.instance lpConfigBoolForKey:@"auto_answer"]) {
+	}/* else if ([LinphoneManager.instance lpConfigBoolForKey:@"auto_answer"]) {
 		LinphoneCallState state = linphone_call_get_state(_call);
 		if (state == LinphoneCallIncomingReceived) {
-			LOGI(@"Auto answering call");
+			NSLog(@"Auto answering call");
 			[self onAcceptClick:nil];
 		}
-	}
+	}*/
 }
 
 #pragma mark -
 
 - (void)update {
 	const LinphoneAddress *addr = linphone_call_get_remote_address(_call);
-	[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr withAddressLabel:_addressLabel];
+	//[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr withAddressLabel:_addressLabel];
 	char *uri = linphone_address_as_string_uri_only(addr);
 	ms_free(uri);
-	[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:YES withRoundedRadius:YES];
+	//[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:YES withRoundedRadius:YES];
 
 	_tabBar.hidden = linphone_call_params_video_enabled(linphone_call_get_remote_params(_call));
 	_tabVideoBar.hidden = !_tabBar.hidden;
@@ -113,13 +93,14 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
 	CallIncomingView *thiz = (__bridge CallIncomingView *)user_data;
 	thiz.earlyMedia = TRUE;
 	thiz.earlyMediaView.hidden = NO;
-	linphone_core_set_native_video_window_id(LC, (__bridge void *)(thiz.earlyMediaView));
+    LinphoneCore * core = thiz.core;
+	linphone_core_set_native_video_window_id(core, (__bridge void *)(thiz.earlyMediaView));
 }
 
 - (void)setCall:(LinphoneCall *)call {
 	_call = call;
 	_earlyMedia = FALSE;
-	if ([LinphoneManager.instance lpConfigBoolForKey:@"pref_accept_early_media"] && linphone_core_get_calls_nb(LC) < 2) {
+	if ( linphone_core_get_calls_nb([[CallManager instance] getCore]) < 2) {
 		linphone_call_accept_early_media(_call);
 		// linphone_call_params_get_used_video_codec return 0 if no video stream enabled
 		if (linphone_call_params_get_used_video_codec(linphone_call_get_current_params(_call))) {
