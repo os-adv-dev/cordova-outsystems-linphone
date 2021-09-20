@@ -19,10 +19,10 @@
 
 #import <UIKit/UIKit.h>
 
-#import "UICompositeView.h"
-#import "TPMultiLayoutViewController.h"
+//#import "TPMultiLayoutViewController.h"
 #import "UIRoundedImageView.h"
-#include "LinphoneManager.h"
+#import <linphone/linphonecore.h>
+//#include "LinphoneManager.h"
 
 @protocol IncomingCallViewDelegate <NSObject>
 
@@ -32,10 +32,11 @@
 
 @end
 
-@interface CallIncomingView : TPMultiLayoutViewController <UICompositeViewDelegate> {
+@interface CallIncomingView : UIViewController {
 }
 
 @property(nonatomic) Boolean earlyMedia;
+@property(nonatomic) LinphoneCore * core;
 
 @property(weak, nonatomic) IBOutlet UILabel *nameLabel;
 @property(nonatomic, strong) IBOutlet UILabel *addressLabel;
@@ -45,7 +46,6 @@
 @property(weak, nonatomic) IBOutlet UIView *tabVideoBar;
 @property(weak, nonatomic) IBOutlet UIView *tabBar;
 @property (weak, nonatomic) IBOutlet UIView *earlyMediaView;
-
 
 - (IBAction)onAcceptClick:(id)event;
 - (IBAction)onDeclineClick:(id)event;

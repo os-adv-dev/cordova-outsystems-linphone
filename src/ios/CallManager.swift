@@ -53,12 +53,43 @@ import AVFoundation
 		providerDelegate = ProviderDelegate()
 		callController = CXCallController()
 	}
+    
+    @objc static func instance() -> CallManager {
+        if (theCallManager == nil) {
+            theCallManager = CallManager()
+        }
+        return theCallManager!
+    }
+    
+    @objc func getBackCamId()->String{
+        var backCamId: String = ""
+        let camList = lc?.videoDevicesList
+        if (camList != nil) {
+            for cam in camList! {
+                if cam == "AV Capture: com.apple.avfoundation.avcapturedevice.built-in_video:0" {
+                    backCamId = cam
+                }
+            }
+        }
+        return backCamId
+    }
+    
+    @objc func getFrontCamId()->String{
+        var frontCamId: String = ""
+        let camList = lc?.videoDevicesList
+        if (camList != nil) {
+            for cam in camList! {
+                if cam == "AV Capture: com.apple.avfoundation.avcapturedevice.built-in_video:1" {
+                    frontCamId = cam
+                    try! lc?.setVideodevice(newValue: frontCamId);
+                }
+            }
+        }
+        return frontCamId
+    }
 
-	@objc static func instance() -> CallManager {
-		if (theCallManager == nil) {
-			theCallManager = CallManager()
-		}
-		return theCallManager!
+	@objc func getCore() -> OpaquePointer? {
+        return lc?.getCobject;
 	}
 
 	@objc func setCore(core: OpaquePointer) {
@@ -129,7 +160,7 @@ import AVFoundation
 	
 	@objc static func callKitEnabled() -> Bool {
 		#if !targetEnvironment(simulator)
-		if ConfigManager.instance().lpConfigBoolForKey(key: "use_callkit", section: "app") {
+		if false {
 			return true
 		}
 		#endif
@@ -194,9 +225,9 @@ import AVFoundation
 	func requestTransaction(_ transaction: CXTransaction, action: String) {
 		callController.request(transaction) { error in
 			if let error = error {
-				Log.directLog(BCTBX_LOG_ERROR, text: "CallKit: Requested transaction \(action) failed because: \(error)")
+                //Log.directLog(BCTBX_LOG_ERROR, text: "CallKit: Requested transaction \(action) failed because: \(error)")
 			} else {
-				Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: Requested transaction \(action) successfully")
+                //Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: Requested transaction \(action) successfully")
 			}
 		}
 	}
@@ -226,7 +257,7 @@ import AVFoundation
 
 	@objc func acceptCall(call: OpaquePointer?, hasVideo:Bool) {
 		if (call == nil) {
-			Log.directLog(BCTBX_LOG_ERROR, text: "Can not accept null call!")
+            //Log.directLog(BCTBX_LOG_ERROR, text: "Can not accept null call!")
 			return
 		}
 		let call = Call.getSwiftObject(cObject: call!)
@@ -237,24 +268,25 @@ import AVFoundation
 		do {
 			let callParams = try lc!.createCallParams(call: call)
 			callParams.videoEnabled = hasVideo
-			if (ConfigManager.instance().lpConfigBoolForKey(key: "edge_opt_preference")) {
-				let low_bandwidth = (AppManager.network() == .network_2g)
-				if (low_bandwidth) {
-					Log.directLog(BCTBX_LOG_MESSAGE, text: "Low bandwidth mode")
-				}
-				callParams.lowBandwidthEnabled = low_bandwidth
-			}
+            //TODO lowbandwidth
+            //if ConfigManager.instance().lpConfigBoolForKey(key: "edge_opt_preference") {
+            let low_bandwidth = (AppManager.network() == .network_2g)
+            if (low_bandwidth) {
+                //Log.directLog(BCTBX_LOG_MESSAGE, text: "Low bandwidth mode")
+            }
+            callParams.lowBandwidthEnabled = low_bandwidth
 
 			//We set the record file name here because we can't do it after the call is started.
 			let address = call.callLog?.fromAddress
 			let writablePath = AppManager.recordingFilePathFromCall(address: address?.username ?? "")
-			Log.directLog(BCTBX_LOG_MESSAGE, text: "Record file path: \(String(describing: writablePath))")
+            //Log.directLog(BCTBX_LOG_MESSAGE, text: "Record file path: \(String(describing: writablePath))")
 			callParams.recordFile = writablePath
 			
 			
 			try call.acceptWithParams(params: callParams)
 		} catch {
-			Log.directLog(BCTBX_LOG_ERROR, text: "accept call failed \(error)")
+            print("accept call failed \(error)")
+            //Log.directLog(BCTBX_LOG_ERROR, text: "accept call failed \(error)")
 		}
 	}
 
@@ -268,7 +300,7 @@ import AVFoundation
 		let sAddr = Address.getSwiftObject(cObject: addr!)
 		if (CallManager.callKitEnabled() && !CallManager.instance().nextCallIsTransfer) {
 			let uuid = UUID()
-			let name = FastAddressBook.displayName(for: addr) ?? "unknow"
+            let name = sAddr.displayName;
 			let handle = CXHandle(type: .generic, value: sAddr.asStringUriOnly())
 			let startCallAction = CXStartCallAction(call: uuid, handle: handle)
 			let transaction = CXTransaction(action: startCallAction)
@@ -283,24 +315,79 @@ import AVFoundation
 			try? doCall(addr: sAddr, isSas: isSas)
 		}
 	}
+    
+    func doCall(addr: Address, isSas: Bool, isLowBandwidth:Bool, isVideo:Bool) throws {
+        let displayName = addr.displayName
+        
+        let lcallParams = try CallManager.instance().lc!.createCallParams(call: nil)
+        //TODO lowbandwidth
+        if isLowBandwidth && AppManager.network() == .network_2g {
+            //Log.directLog(BCTBX_LOG_MESSAGE, text: "Enabling low bandwidth mode")
+            lcallParams.lowBandwidthEnabled = true
+        }
+        let transportType = (CallManager.instance().lc?.defaultAccount?.params?.transport)
+        if transportType != nil {
+            try addr.setTransport(newValue: transportType!)
+        }
+
+        if (displayName != nil) {
+            try addr.setDisplayname(newValue: displayName)
+        }
+        
+        lcallParams.videoEnabled = isVideo;
+/*
+        if(ConfigManager.instance().lpConfigBoolForKey(key: "override_domain_with_default_one")) {
+            try addr.setDomain(newValue: ConfigManager.instance().lpConfigStringForKey(key: "domain", section: "assistant"))
+        }
+*/
+        if (CallManager.instance().nextCallIsTransfer) {
+            let call = CallManager.instance().lc!.currentCall
+            try call?.transferTo(referTo: addr)
+            CallManager.instance().nextCallIsTransfer = false
+        } else {
+            //We set the record file name here because we can't do it after the call is started.
+            let writablePath = AppManager.recordingFilePathFromCall(address: addr.username )
+            //Log.directLog(BCTBX_LOG_DEBUG, text: "record file path: \(writablePath)")
+            lcallParams.recordFile = writablePath
+            if (isSas) {
+                lcallParams.mediaEncryption = .ZRTP
+            }
+            let call = CallManager.instance().lc!.inviteAddressWithParams(addr: addr, params: lcallParams)
+            if (call != nil) {
+                // The LinphoneCallAppData object should be set on call creation with callback
+                // - (void)onCall:StateChanged:withMessage:. If not, we are in big trouble and expect it to crash
+                // We are NOT responsible for creating the AppData.
+                let data = CallManager.getAppData(sCall: call!)
+                if (data == nil) {
+                    //Log.directLog(BCTBX_LOG_ERROR, text: "New call instanciated but app data was not set. Expect it to crash.")
+                    /* will be used later to notify user if video was not activated because of the linphone core*/
+                } else {
+                    data!.videoRequested = lcallParams.videoEnabled
+                    CallManager.setAppData(sCall: call!, appData: data)
+                }
+            }
+        }
+    }
 
 	func doCall(addr: Address, isSas: Bool) throws {
-		let displayName = FastAddressBook.displayName(for: addr.getCobject)
-
+        let displayName = addr.displayName
+        
 		let lcallParams = try CallManager.instance().lc!.createCallParams(call: nil)
-		if ConfigManager.instance().lpConfigBoolForKey(key: "edge_opt_preference") && AppManager.network() == .network_2g {
-			Log.directLog(BCTBX_LOG_MESSAGE, text: "Enabling low bandwidth mode")
+        //TODO lowbandwidth
+		//if ConfigManager.instance().lpConfigBoolForKey(key: "edge_opt_preference") && AppManager.network() == .network_2g {
+        if AppManager.network() == .network_2g {
+            //Log.directLog(BCTBX_LOG_MESSAGE, text: "Enabling low bandwidth mode")
 			lcallParams.lowBandwidthEnabled = true
 		}
 
 		if (displayName != nil) {
-			try addr.setDisplayname(newValue: displayName!)
+			try addr.setDisplayname(newValue: displayName)
 		}
-
+/*
 		if(ConfigManager.instance().lpConfigBoolForKey(key: "override_domain_with_default_one")) {
 			try addr.setDomain(newValue: ConfigManager.instance().lpConfigStringForKey(key: "domain", section: "assistant"))
 		}
-
+*/
 		if (CallManager.instance().nextCallIsTransfer) {
 			let call = CallManager.instance().lc!.currentCall
 			try call?.transferTo(referTo: addr)
@@ -308,7 +395,7 @@ import AVFoundation
 		} else {
 			//We set the record file name here because we can't do it after the call is started.
 			let writablePath = AppManager.recordingFilePathFromCall(address: addr.username )
-			Log.directLog(BCTBX_LOG_DEBUG, text: "record file path: \(writablePath)")
+            //Log.directLog(BCTBX_LOG_DEBUG, text: "record file path: \(writablePath)")
 			lcallParams.recordFile = writablePath
 			if (isSas) {
 				lcallParams.mediaEncryption = .ZRTP
@@ -320,7 +407,7 @@ import AVFoundation
 				// We are NOT responsible for creating the AppData.
 				let data = CallManager.getAppData(sCall: call!)
 				if (data == nil) {
-					Log.directLog(BCTBX_LOG_ERROR, text: "New call instanciated but app data was not set. Expect it to crash.")
+                    //Log.directLog(BCTBX_LOG_ERROR, text: "New call instanciated but app data was not set. Expect it to crash.")
 					/* will be used later to notify user if video was not activated because of the linphone core*/
 				} else {
 					data!.videoRequested = lcallParams.videoEnabled
@@ -341,7 +428,7 @@ import AVFoundation
 
 			let currentUuid = CallManager.instance().providerDelegate.uuids["\(firstCall)"]
 			if (currentUuid == nil) {
-				Log.directLog(BCTBX_LOG_ERROR, text: "Can not find correspondant call to group.")
+                //Log.directLog(BCTBX_LOG_ERROR, text: "Can not find correspondant call to group.")
 				return
 			}
 
@@ -363,15 +450,15 @@ import AVFoundation
 
 	@objc func terminateCall(call: OpaquePointer?) {
 		if (call == nil) {
-			Log.directLog(BCTBX_LOG_ERROR, text: "Can not terminate null call!")
+            //Log.directLog(BCTBX_LOG_ERROR, text: "Can not terminate null call!")
 			return
 		}
 		let call = Call.getSwiftObject(cObject: call!)
 		do {
 			try call.terminate()
-			Log.directLog(BCTBX_LOG_DEBUG, text: "Call terminated")
+            //Log.directLog(BCTBX_LOG_DEBUG, text: "Call terminated")
 		} catch {
-			Log.directLog(BCTBX_LOG_ERROR, text: "Failed to terminate call failed because \(error)")
+            //Log.directLog(BCTBX_LOG_ERROR, text: "Failed to terminate call failed because \(error)")
 		}
 	}
 
@@ -382,7 +469,7 @@ import AVFoundation
 
 		let uuid = providerDelegate.uuids["\(callId)"]
 		if (uuid == nil) {
-			Log.directLog(BCTBX_LOG_MESSAGE, text: "Mark call \(callId) as declined.")
+            //Log.directLog(BCTBX_LOG_MESSAGE, text: "Mark call \(callId) as declined.")
 			let uuid = UUID()
 			providerDelegate.uuids.updateValue(uuid, forKey: callId)
 			let callInfo = CallInfo.newIncomingCallInfo(callId: callId)
@@ -406,7 +493,7 @@ import AVFoundation
 		let callid = call.callLog?.callId ?? ""
 		let uuid = providerDelegate.uuids["\(callid)"]
 		if (uuid == nil) {
-			Log.directLog(BCTBX_LOG_ERROR, text: "Can not find correspondant call to set held.")
+            //Log.directLog(BCTBX_LOG_ERROR, text: "Can not find correspondant call to set held.")
 			return
 		}
 		let setHeldAction = CXSetHeldCallAction(call: uuid!, onHold: hold)
@@ -441,8 +528,8 @@ import AVFoundation
 	@objc func acceptVideo(call: OpaquePointer, confirm: Bool) {
 		let sCall = Call.getSwiftObject(cObject: call)
 		let params = try? lc?.createCallParams(call: sCall)
-		params?.videoEnabled = confirm
-		try? sCall.acceptUpdate(params: params)
+        params??.videoEnabled = confirm
+        try? sCall.acceptUpdate(params: params!!)
 	}
 
 	func onGlobalStateChanged(core: Core, state: GlobalState, message: String) {
@@ -492,21 +579,21 @@ import AVFoundation
 			switch cstate {
 				case .IncomingReceived:
 					let addr = call.remoteAddress;
-					let displayName = FastAddressBook.displayName(for: addr?.getCobject) ?? "Unknown"
+                    let displayName = addr?.displayName
 					if (CallManager.callKitEnabled()) {
 						let uuid = CallManager.instance().providerDelegate.uuids["\(callId!)"]
 						if (uuid != nil) {
 							// Tha app is now registered, updated the call already existed.
-							CallManager.instance().providerDelegate.updateCall(uuid: uuid!, handle: addr!.asStringUriOnly(), hasVideo: video, displayName: displayName)
+                            CallManager.instance().providerDelegate.updateCall(uuid: uuid!, handle: addr!.asStringUriOnly(), hasVideo: video, displayName: displayName ?? "unknown")
 						} else {
-							CallManager.instance().displayIncomingCall(call: call, handle: addr!.asStringUriOnly(), hasVideo: video, callId: callId!, displayName: displayName)
+							CallManager.instance().displayIncomingCall(call: call, handle: addr!.asStringUriOnly(), hasVideo: video, callId: callId!, displayName: displayName ?? "unknown")
 						}
 					} else if (UIApplication.shared.applicationState != .active) {
 						// not support callkit , use notif
 						let content = UNMutableNotificationContent()
 						content.title = NSLocalizedString("Incoming call", comment: "")
-						content.body = displayName
-						content.sound = UNNotificationSound.init(named: UNNotificationSoundName.init("notes_of_the_optimistic.caf"))
+						content.body = displayName ?? "unknown"
+                        content.sound = UNNotificationSound.init(named: UNNotificationSoundName.init(string: "notes_of_the_optimistic.caf") as String)
 						content.categoryIdentifier = "call_cat"
 						content.userInfo = ["CallId" : callId!]
 						let req = UNNotificationRequest.init(identifier: "call_request", content: content, trigger: nil)
@@ -519,7 +606,7 @@ import AVFoundation
 						if (uuid != nil) {
 							let callInfo = CallManager.instance().providerDelegate.callInfos[uuid!]
 							if (callInfo != nil && callInfo!.isOutgoing && !callInfo!.connected) {
-								Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: outgoing call connected with uuid \(uuid!) and callId \(callId!)")
+                                //Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: outgoing call connected with uuid \(uuid!) and callId \(callId!)")
 								CallManager.instance().providerDelegate.reportOutgoingCallConnected(uuid: uuid!)
 								callInfo!.connected = true
 								CallManager.instance().providerDelegate.callInfos.updateValue(callInfo!, forKey: uuid!)
@@ -545,7 +632,7 @@ import AVFoundation
 							CallManager.instance().providerDelegate.uuids.removeValue(forKey: "")
 							CallManager.instance().providerDelegate.uuids.updateValue(uuid!, forKey: callId!)
 
-							Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: outgoing call started connecting with uuid \(uuid!) and callId \(callId!)")
+                            //Log.directLog(BCTBX_LOG_MESSAGE, text: "CallKit: outgoing call started connecting with uuid \(uuid!) and callId \(callId!)")
 							CallManager.instance().providerDelegate.reportOutgoingCallStartedConnecting(uuid: uuid!)
 						} else {
 							CallManager.instance().referedToCall = callId
@@ -555,7 +642,8 @@ import AVFoundation
 				case .End,
 					 .Error:
 					var displayName = "Unknown"
-					if let addr = call.remoteAddress, let contactName = FastAddressBook.displayName(for: addr.getCobject) {
+					if let addr = call.remoteAddress {
+                        let contactName = addr.displayName;
 						displayName = contactName
 					}
 					
@@ -579,7 +667,7 @@ import AVFoundation
 						let center = UNUserNotificationCenter.current()
 						center.add(request) { (error : Error?) in
 							if error != nil {
-							Log.directLog(BCTBX_LOG_ERROR, text: "Error while adding notification request : \(error!.localizedDescription)")
+                                //Log.directLog(BCTBX_LOG_ERROR, text: "Error while adding notification request : \(error!.localizedDescription)")
 							}
 						}
 					}
@@ -588,7 +676,7 @@ import AVFoundation
 						var uuid = CallManager.instance().providerDelegate.uuids["\(callId!)"]
 						if (callId == CallManager.instance().referedToCall) {
 							// refered call ended before connecting
-							Log.directLog(BCTBX_LOG_MESSAGE, text: "Callkit: end refered to call :  \(String(describing: CallManager.instance().referedToCall))")
+                            //Log.directLog(BCTBX_LOG_MESSAGE, text: "Callkit: end refered to call :  \(String(describing: CallManager.instance().referedToCall))")
 							CallManager.instance().referedFromCall = nil
 							CallManager.instance().referedToCall = nil
 						}
@@ -598,7 +686,7 @@ import AVFoundation
 						}
 						if (uuid != nil) {
 							if (callId == CallManager.instance().referedFromCall) {
-								Log.directLog(BCTBX_LOG_MESSAGE, text: "Callkit: end refered from call : \(String(describing: CallManager.instance().referedFromCall))")
+                                //Log.directLog(BCTBX_LOG_MESSAGE, text: "Callkit: end refered from call : \(String(describing: CallManager.instance().referedFromCall))")
 								CallManager.instance().referedFromCall = nil
 								let callInfo = CallManager.instance().providerDelegate.callInfos[uuid!]
 								callInfo!.callId = CallManager.instance().referedToCall ?? ""

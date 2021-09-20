@@ -19,15 +19,20 @@
 
 #import <UIKit/UIKit.h>
 
-#import "UICompositeView.h"
-#import "TPMultiLayoutViewController.h"
+//#import "TPMultiLayoutViewController.h"
 #include "linphone/linphonecore.h"
 #import "UIRoundedImageView.h"
 #import "UIDigitButton.h"
+#import "UISpeakerButton.h"
+#import "UIToggleButton.h"
+#import "UIBluetoothButton.h"
+#import "UIMutedMicroButton.h"
 
 
-@interface CallOutgoingView : TPMultiLayoutViewController <UICompositeViewDelegate> {
+@interface CallOutgoingView : UIViewController {
 }
+
+@property(nonatomic) LinphoneCore * core;
 @property(weak, nonatomic) IBOutlet UIRoundedImageView *avatarImage;
 @property(weak, nonatomic) IBOutlet UILabel *nameLabel;
 @property(weak, nonatomic) IBOutlet UISpeakerButton *speakerButton;

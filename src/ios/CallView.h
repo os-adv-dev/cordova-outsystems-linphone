@@ -19,12 +19,12 @@
 
 #import <UIKit/UIKit.h>
 
-#import "VideoZoomHandler.h"
+//#import "VideoZoomHandler.h"
 #import "UICamSwitch.h"
 
-#import "UICompositeView.h"
 #import "CallPausedTableView.h"
 
+//#import "TPMultiLayoutViewController.h"
 #import "UIMutedMicroButton.h"
 #import "UIPauseButton.h"
 #import "UISpeakerButton.h"
@@ -36,14 +36,13 @@
 
 @class VideoView;
 
-@interface CallView : TPMultiLayoutViewController <UIGestureRecognizerDelegate, UICompositeViewDelegate> {
+@interface CallView : UIViewController <UIGestureRecognizerDelegate> {
   @private
 	UITapGestureRecognizer *singleFingerTap;
 	NSTimer *hideControlsTimer;
 	NSTimer *videoDismissTimer;
 	BOOL videoHidden;
     BOOL callRecording;
-	VideoZoomHandler *videoZoomHandler;
 }
 
 @property(nonatomic, strong) IBOutlet CallPausedTableView *pausedCallsTable;
