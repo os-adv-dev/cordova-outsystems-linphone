@@ -294,7 +294,7 @@ public class Linphone extends CordovaPlugin {
                     case IncomingReceived :
                         Log.d(TAG,"IncomingReceived");
                         try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingCall\",\"Caller\":\""+call.getRemoteAddress().asStringUriOnly()+"\",\"Message\":\""+message+"\"}");
+                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingCall\",\"Message\":\""+message+"\"}");
                             result = new PluginResult(PluginResult.Status.OK,objReply);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -367,7 +367,7 @@ public class Linphone extends CordovaPlugin {
                     case StreamsRunning:
                         Log.d(TAG,"StreamsRunning");
                         try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"StreamsRunning\",\"isVideoEnabled\":\""+(core.getVideoDevicesList().length > 2 && call.getCurrentParams().videoEnabled())+"\",\"Message\":\""+message+"\"}");
+                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"StreamsRunning\",\"Message\":\""+message+"\"}");
                             result = new PluginResult(PluginResult.Status.OK,objReply);
                         } catch (JSONException e) {
                             e.printStackTrace();

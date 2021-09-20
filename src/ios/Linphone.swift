@@ -234,6 +234,10 @@ var login: Bool = false
         // Same for auth info
         lc.clearAllAuthInfo();
     }
+
+    @objc(setListeners:)func setListeners(command : CDVInvokedUrlCommand){
+        mCallbackListener = command.callbackId
+    }
     
     @objc(call:)func call(command : CDVInvokedUrlCommand){
         #if DEBUG_LOGS
@@ -288,24 +292,55 @@ var login: Bool = false
         self.lc.stop()
     }
     
-    func onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
-        
-    }
-    
     func onRegistrationStateChanged(core: Core, proxyConfig: ProxyConfig, state: RegistrationState, message: String) {
+        let stateString:String
+        switch state {
+        case .Ok:
+            stateString = "OK"
+        case .Cleared:
+            stateString = "Cleared"
+        case .Failed:
+            stateString = "Failed"
+        case .None:
+            stateString = "None"
+        case .Progress:
+            stateString = "Progress"
+        }
+        let json = ["Type":"Registration","Status":stateString,"Message":message]
+        let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        if mCallbackListener != "" {
+            self.commandDelegate.send(result, callbackId: mCallbackListener)
+        }
         print("New registration state \(state) for user id \( String(describing: proxyConfig.identityAddress?.asString()))\n")
     }
     
+    func onAudioDevicesListUpdated(core: Core) {
+        let json = ["Type":"Registration","Status":"AudioUpdated"]
+        let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        if mCallbackListener != "" {
+            self.commandDelegate.send(result, callbackId: mCallbackListener)
+        }
+    }
+    
+    func onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
+        let json = ["Type":"Registration","Status":"AudioChanged"]
+        let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        if mCallbackListener != "" {
+            self.commandDelegate.send(result, callbackId: mCallbackListener)
+        }
+    }
+    
     func onCallStateChanged(core: Core, call: Call, state: Call.State, message: String) {
+        let stateString:String
         switch state {
         case .OutgoingRinging:
-            print("It is now ringing remotely !\n")
+            stateString = "OutgoingRinging"
         case .OutgoingEarlyMedia:
-            print("Receiving some early media\n")
+            stateString = "OutgoingEarlyMedia"
         case .Connected:
-            print("We are connected !\n")
+            stateString = "Connected"
         case .StreamsRunning:
-            print("Media streams established !\n")
+            stateString = "StreamsRunning"
             if(callView == nil){
                 if callIncomingView != nil {
                     callIncomingView.dismiss(animated: true, completion: nil)
@@ -318,6 +353,7 @@ var login: Bool = false
                 viewController.present(callView, animated: true, completion: nil)
             }
         case .End:
+            stateString = "End"
             if callIncomingView != nil {
                 callIncomingView.dismiss(animated: true, completion: nil)
                 callIncomingView = nil
@@ -328,8 +364,8 @@ var login: Bool = false
                 callOutgoingView.dismiss(animated: true, completion: nil)
                 callOutgoingView = nil
             }
-            print("Call is terminated.\n")
         case .Error:
+            stateString = "Error"
             if callIncomingView != nil {
                 callIncomingView.dismiss(animated: true, completion: nil)
                 callIncomingView = nil
@@ -340,15 +376,47 @@ var login: Bool = false
                 callOutgoingView.dismiss(animated: true, completion: nil)
                 callOutgoingView = nil
             }
-            print("Call failure !")
         case .IncomingReceived:
+            stateString = "IncomingReceived"
             callIncomingView = CallIncomingView()
             callIncomingView.delegate = self
             callIncomingView.call = core.currentCall?.getCobject
             viewController.present(callIncomingView, animated: true, completion: nil)
-            print("It is now ringing localy!\n")
-        default:
-            print("Unhandled notification \(state)\n")
+        case .EarlyUpdatedByRemote:
+            stateString = "EarlyUpdatedByRemote"
+        case .EarlyUpdating:
+            stateString = "EarlyUpdating"
+        case .Idle:
+            stateString = "Idle"
+        case .IncomingEarlyMedia:
+            stateString = "IncomingEarlyMedia"
+        case .OutgoingInit:
+            stateString = "OutgoingInit"
+        case .Updating:
+            stateString = "Updating"
+        case .UpdatedByRemote:
+            stateString = "UpdatedByRemote"
+        case .Resuming:
+            stateString = "Resuming"
+        case .Released:
+            stateString = "Released"
+        case .Referred:
+            stateString = "Referred"
+        case .PushIncomingReceived:
+            stateString = "PushIncomingReceived"
+        case .Pausing:
+            stateString = "Pausing"
+        case .Paused:
+            stateString = "Paused"
+        case .PausedByRemote:
+            stateString = "PausedByRemote"
+        case .OutgoingProgress:
+            stateString = "OutgoingProgress"
+        }
+        let json = ["Type":"Registration","Status":stateString,"Message":message]
+        let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        if mCallbackListener != "" {
+            self.commandDelegate.send(result, callbackId: mCallbackListener)
         }
     }
     
