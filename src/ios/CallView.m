@@ -37,175 +37,173 @@
 const NSInteger SECURE_BUTTON_TAG = 5;
 
 @implementation CallView {
-	BOOL hiddenVolume;
+    BOOL hiddenVolume;
 }
 
 #pragma mark - Lifecycle Functions
 
 - (id)init {
-	self = [super initWithNibName:NSStringFromClass(self.class) bundle:[NSBundle mainBundle]];
-	if (self != nil) {
-		singleFingerTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleControls:)];
-		videoHidden = TRUE;
-		[self updateCallView];
-	}
-	return self;
+    self = [super initWithNibName:NSStringFromClass(self.class) bundle:[NSBundle mainBundle]];
+    if (self != nil) {
+        singleFingerTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleControls:)];
+        videoHidden = TRUE;
+        [self updateCallView];
+    }
+    return self;
 }
 
 #pragma mark - ViewController Functions
 
 - (void)viewDidLoad {
-	[super viewDidLoad];
+    [super viewDidLoad];
 
-	_routesEarpieceButton.enabled = YES;
+    _routesEarpieceButton.enabled = YES;
 
 // TODO: fixme! video preview frame is too big compared to openGL preview
 // frame, so until this is fixed, temporary disabled it.
 #if 0
-	_videoPreview.layer.borderColor = UIColor.whiteColor.CGColor;
-	_videoPreview.layer.borderWidth = 1;
+    _videoPreview.layer.borderColor = UIColor.whiteColor.CGColor;
+    _videoPreview.layer.borderWidth = 1;
 #endif
-	[singleFingerTap setNumberOfTapsRequired:1];
-	[singleFingerTap setCancelsTouchesInView:FALSE];
-	[self.videoView addGestureRecognizer:singleFingerTap];
+    [singleFingerTap setNumberOfTapsRequired:1];
+    [singleFingerTap setCancelsTouchesInView:FALSE];
+    [self.videoView addGestureRecognizer:singleFingerTap];
 
-	//[videoZoomHandler setup:_videoGroup];
-	_videoGroup.alpha = 0;
+    //[videoZoomHandler setup:_videoGroup];
+    _videoGroup.alpha = 0;
 
-	[_videoCameraSwitch setPreview:_videoPreview];
+    [_videoCameraSwitch setPreview:_videoPreview];
 
-	UIPanGestureRecognizer *dragndrop =
-		[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(moveVideoPreview:)];
-	dragndrop.minimumNumberOfTouches = 1;
-	[_videoPreview addGestureRecognizer:dragndrop];
+    UIPanGestureRecognizer *dragndrop =
+        [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(moveVideoPreview:)];
+    dragndrop.minimumNumberOfTouches = 1;
+    [_videoPreview addGestureRecognizer:dragndrop];
 
-	[_zeroButton setDigit:'0'];
-	[_zeroButton setDtmf:true];
-	[_oneButton setDigit:'1'];
-	[_oneButton setDtmf:true];
-	[_twoButton setDigit:'2'];
-	[_twoButton setDtmf:true];
-	[_threeButton setDigit:'3'];
-	[_threeButton setDtmf:true];
-	[_fourButton setDigit:'4'];
-	[_fourButton setDtmf:true];
-	[_fiveButton setDigit:'5'];
-	[_fiveButton setDtmf:true];
-	[_sixButton setDigit:'6'];
-	[_sixButton setDtmf:true];
-	[_sevenButton setDigit:'7'];
-	[_sevenButton setDtmf:true];
-	[_eightButton setDigit:'8'];
-	[_eightButton setDtmf:true];
-	[_nineButton setDigit:'9'];
-	[_nineButton setDtmf:true];
-	[_starButton setDigit:'*'];
-	[_starButton setDtmf:true];
-	[_hashButton setDigit:'#'];
-	[_hashButton setDtmf:true];
+    [_zeroButton setDigit:'0'];
+    [_zeroButton setDtmf:true];
+    [_oneButton setDigit:'1'];
+    [_oneButton setDtmf:true];
+    [_twoButton setDigit:'2'];
+    [_twoButton setDtmf:true];
+    [_threeButton setDigit:'3'];
+    [_threeButton setDtmf:true];
+    [_fourButton setDigit:'4'];
+    [_fourButton setDtmf:true];
+    [_fiveButton setDigit:'5'];
+    [_fiveButton setDtmf:true];
+    [_sixButton setDigit:'6'];
+    [_sixButton setDtmf:true];
+    [_sevenButton setDigit:'7'];
+    [_sevenButton setDtmf:true];
+    [_eightButton setDigit:'8'];
+    [_eightButton setDtmf:true];
+    [_nineButton setDigit:'9'];
+    [_nineButton setDtmf:true];
+    [_starButton setDigit:'*'];
+    [_starButton setDtmf:true];
+    [_hashButton setDigit:'#'];
+    [_hashButton setDtmf:true];
 }
 
 - (void)dealloc {
-	// Remove all observer
-	[NSNotificationCenter.defaultCenter removeObserver:self];
+    // Remove all observer
+    [NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-	[super viewWillAppear:animated];
-	_waitView.hidden = TRUE;
-	CallManager.instance.nextCallIsTransfer = FALSE;
+    [super viewWillAppear:animated];
+    _waitView.hidden = TRUE;
+    CallManager.instance.nextCallIsTransfer = FALSE;
     
     callRecording = FALSE;
-    _recordButtonOnView.hidden = TRUE;
 
-	// Update on show
-	[self hideRoutes:TRUE animated:FALSE];
-	[self hideOptions:TRUE animated:FALSE];
-	[self hidePad:TRUE animated:FALSE];
-	[self hideSpeaker:[[CallManager instance] isBluetoothAvailable]];
-	[self callDurationUpdate];
-	[self onCurrentCallChange];
-	// Set windows (warn memory leaks)
-	linphone_core_set_native_video_window_id([[CallManager instance] getCore], (__bridge void *)(_videoView));
-	linphone_core_set_native_preview_window_id([[CallManager instance] getCore], (__bridge void *)(_videoPreview));
+    // Update on show
+    [self hideRoutes:TRUE animated:FALSE];
+    [self hidePad:TRUE animated:FALSE];
+    [self hideSpeaker:[[CallManager instance] isBluetoothAvailable]];
+    [self callDurationUpdate];
+    [self onCurrentCallChange];
+    // Set windows (warn memory leaks)
+    linphone_core_set_native_video_window_id([[CallManager instance] getCore], (__bridge void *)(_videoView));
+    linphone_core_set_native_preview_window_id([[CallManager instance] getCore], (__bridge void *)(_videoPreview));
 
-	[self previewTouchLift];
-	// Enable tap
-	[singleFingerTap setEnabled:TRUE];
+    [self previewTouchLift];
+    // Enable tap
+    [singleFingerTap setEnabled:TRUE];
 
-	[NSNotificationCenter.defaultCenter addObserver:self
-										   selector:@selector(messageReceived:)
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(messageReceived:)
                                                name:@"LinphoneMessageReceived"
-											 object:nil];
-	[NSNotificationCenter.defaultCenter addObserver:self
-										   selector:@selector(bluetoothAvailabilityUpdateEvent:)
+                                             object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(bluetoothAvailabilityUpdateEvent:)
                                                name:@"LinphoneBluetoothAvailabilityUpdate"
-											 object:nil];
-	[NSNotificationCenter.defaultCenter addObserver:self
-										   selector:@selector(callUpdateEvent:)
+                                             object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self
+                                           selector:@selector(callUpdateEvent:)
                                                name:@"LinphoneCallUpdate"
-											 object:nil];
+                                             object:nil];
 
-	[NSTimer scheduledTimerWithTimeInterval:1
-									 target:self
-								   selector:@selector(callDurationUpdate)
-								   userInfo:nil
-									repeats:YES];
+    [NSTimer scheduledTimerWithTimeInterval:1
+                                     target:self
+                                   selector:@selector(callDurationUpdate)
+                                   userInfo:nil
+                                    repeats:YES];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-	[super viewDidAppear:animated];
+    [super viewDidAppear:animated];
 
-	[[UIApplication sharedApplication] setIdleTimerDisabled:YES];
-	[[UIDevice currentDevice] setProximityMonitoringEnabled:TRUE];
-	
-	hiddenVolume = TRUE;
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+    [[UIDevice currentDevice] setProximityMonitoringEnabled:TRUE];
+    
+    hiddenVolume = TRUE;
 
-	// we must wait didAppear to reset fullscreen mode because we cannot change it in viewwillappear
-	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
-	LinphoneCallState state = (call != NULL) ? linphone_call_get_state(call) : 0;
-	[self callUpdate:call state:state animated:FALSE];
+    // we must wait didAppear to reset fullscreen mode because we cannot change it in viewwillappear
+    LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
+    LinphoneCallState state = (call != NULL) ? linphone_call_get_state(call) : 0;
+    [self callUpdate:call state:state animated:FALSE];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-	[super viewWillDisappear:animated];
+    [super viewWillDisappear:animated];
 [[UIDevice currentDevice] setProximityMonitoringEnabled:FALSE];
-	[self disableVideoDisplay:TRUE animated:NO];
+    [self disableVideoDisplay:TRUE animated:NO];
 
-	if (hideControlsTimer != nil) {
-		[hideControlsTimer invalidate];
-		hideControlsTimer = nil;
-	}
+    if (hideControlsTimer != nil) {
+        [hideControlsTimer invalidate];
+        hideControlsTimer = nil;
+    }
 
-	if (hiddenVolume) {
-		//TODO
+    if (hiddenVolume) {
+        //TODO
         //[PhoneMainView.instance setVolumeHidden:FALSE];
-		hiddenVolume = FALSE;
-	}
+        hiddenVolume = FALSE;
+    }
 
-	if (videoDismissTimer) {
-		[self dismissVideoActionSheet:videoDismissTimer];
-		[videoDismissTimer invalidate];
-		videoDismissTimer = nil;
-	}
+    if (videoDismissTimer) {
+        [self dismissVideoActionSheet:videoDismissTimer];
+        [videoDismissTimer invalidate];
+        videoDismissTimer = nil;
+    }
 
-	// Remove observer
-	[NSNotificationCenter.defaultCenter removeObserver:self];
+    // Remove observer
+    [NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
-	[super viewDidDisappear:animated];
+    [super viewDidDisappear:animated];
 
-	[[UIApplication sharedApplication] setIdleTimerDisabled:false];
-	[[UIDevice currentDevice] setProximityMonitoringEnabled:FALSE];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:false];
+    [[UIDevice currentDevice] setProximityMonitoringEnabled:FALSE];
 
-	// Disable tap
-	[singleFingerTap setEnabled:FALSE];
+    // Disable tap
+    [singleFingerTap setEnabled:FALSE];
 
-	if (linphone_core_get_calls_nb([[CallManager instance] getCore]) == 0) {
-		// reseting speaker button because no more call
-		_speakerButton.selected = FALSE;
-	}
+    if (linphone_core_get_calls_nb([[CallManager instance] getCore]) == 0) {
+        // reseting speaker button because no more call
+        _speakerButton.selected = FALSE;
+    }
     /*
     NSString *address = [LinphoneManager.instance lpConfigStringForKey:@"sas_dialog_denied"];
     if (address) {
@@ -221,22 +219,21 @@ const NSInteger SECURE_BUTTON_TAG = 5;
          } ];
         [securityDialog.securityImage setImage:[UIImage imageNamed:@"security_alert_indicator.png"]];
         securityDialog.securityImage.hidden = FALSE;
-		[securityDialog setSpecialColor];
+        [securityDialog setSpecialColor];
         [LinphoneManager.instance lpConfigSetString:nil forKey:@"sas_dialog_denied"];
     }*/
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-	[super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-	[self previewTouchLift];
-    [_recordButtonOnView setHidden:!callRecording];
-	[self updateCallView];
-	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]) ;
-	if (call && linphone_call_get_state(call) == LinphoneCallStatePausedByRemote) {
-		_pausedByRemoteView.hidden = NO;
-		[self updateInfoView:TRUE];
-	}
-	_conferenceView.hidden = !linphone_core_is_in_conference([[CallManager instance] getCore]);
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    [self previewTouchLift];
+    [self updateCallView];
+    LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]) ;
+    if (call && linphone_call_get_state(call) == LinphoneCallStatePausedByRemote) {
+        _pausedByRemoteView.hidden = NO;
+        [self updateInfoView:TRUE];
+    }
+    _conferenceView.hidden = !linphone_core_is_in_conference([[CallManager instance] getCore]);
 }
 
 #pragma mark - UI modification
@@ -244,7 +241,7 @@ const NSInteger SECURE_BUTTON_TAG = 5;
 - (void)updateInfoView:(BOOL)pausedByRemote {
     CGRect infoFrame = _infoView.frame;
     if (pausedByRemote || !videoHidden) {
-		infoFrame.origin.y = 0;
+        infoFrame.origin.y = 0;
     } else {
         infoFrame.origin.y = (_avatarImage.frame.origin.y-66)/2;
     }
@@ -253,170 +250,152 @@ const NSInteger SECURE_BUTTON_TAG = 5;
 
 - (void)updateCallView {
     CGRect pauseFrame = _callPauseButton.frame;
-	CGRect recordFrame = _recordButtonOnView.frame;
     if (videoHidden) {
-		pauseFrame.origin.y = _bottomBar.frame.origin.y - pauseFrame.size.height - 60;
+        pauseFrame.origin.y = _bottomBar.frame.origin.y - pauseFrame.size.height - 60;
     } else {
         pauseFrame.origin.y = _videoCameraSwitch.frame.origin.y+_videoGroup.frame.origin.y;
     }
-	recordFrame.origin.y = _bottomBar.frame.origin.y - pauseFrame.size.height - 60;
     _callPauseButton.frame = pauseFrame;
-	_recordButtonOnView.frame = recordFrame;
-	[self updateInfoView:FALSE];
+    [self updateInfoView:FALSE];
 }
 
 - (void)hideSpinnerIndicator:(LinphoneCall *)call {
-	_videoWaitingForFirstImage.hidden = TRUE;
+    _videoWaitingForFirstImage.hidden = TRUE;
 }
 
 static void hideSpinner(LinphoneCall *call, void *user_data) {
-	CallView *thiz = (__bridge CallView *)user_data;
-	[thiz hideSpinnerIndicator:call];
+    CallView *thiz = (__bridge CallView *)user_data;
+    [thiz hideSpinnerIndicator:call];
 }
 
 - (void)updateBottomBar:(LinphoneCall *)call state:(LinphoneCallState)state {
-	[_speakerButton update];
-	[_microButton update];
-	[_callPauseButton update];
-	[_conferencePauseButton update];
-	[_videoButton update];
-	[_hangupButton update];
+    [_speakerButton update];
+    [_microButton update];
+    [_callPauseButton update];
+    [_conferencePauseButton update];
+    [_videoButton update];
+    [_hangupButton update];
 
-	_optionsButton.enabled = (!call || !linphone_core_sound_resources_locked([[CallManager instance] getCore]));
-	_optionsTransferButton.enabled = call && !linphone_core_sound_resources_locked([[CallManager instance] getCore]);
-	// enable conference button if 2 calls are presents and at least one is not in the conference
-	int confSize = linphone_core_get_conference_size([[CallManager instance] getCore]) - (linphone_core_is_in_conference([[CallManager instance] getCore]) ? 1 : 0);
-	_optionsConferenceButton.enabled =
-		((linphone_core_get_calls_nb([[CallManager instance] getCore]) > 1) && (linphone_core_get_calls_nb([[CallManager instance] getCore]) != confSize));
-
-	// Disable transfert in conference
-	if (linphone_core_get_current_call([[CallManager instance] getCore]) == NULL) {
-		[_optionsTransferButton setEnabled:FALSE];
-	} else {
-		[_optionsTransferButton setEnabled:TRUE];
-	}
-
-	switch (state) {
-		case LinphoneCallEnd:
-		case LinphoneCallError:
-		case LinphoneCallIncoming:
-		case LinphoneCallOutgoing:
-			[self hidePad:TRUE animated:TRUE];
-			[self hideOptions:TRUE animated:TRUE];
-			[self hideRoutes:TRUE animated:TRUE];
-		default:
-			break;
-	}
+    switch (state) {
+        case LinphoneCallEnd:
+        case LinphoneCallError:
+        case LinphoneCallIncoming:
+        case LinphoneCallOutgoing:
+            [self hidePad:TRUE animated:TRUE];
+            [self hideRoutes:TRUE animated:TRUE];
+        default:
+            break;
+    }
 }
 
 - (void)toggleControls:(id)sender {
-	bool controlsHidden = (_bottomBar.alpha == 0.0);
-	[self hideControls:!controlsHidden sender:sender];
+    bool controlsHidden = (_bottomBar.alpha == 0.0);
+    [self hideControls:!controlsHidden sender:sender];
 }
 
 - (void)timerHideControls:(id)sender {
-	[self hideControls:TRUE sender:sender];
+    [self hideControls:TRUE sender:sender];
 }
 
 - (void)hideControls:(BOOL)hidden sender:(id)sender {
-	if (videoHidden && hidden)
-		return;
+    if (videoHidden && hidden)
+        return;
 
-	if (hideControlsTimer) {
-		[hideControlsTimer invalidate];
-		hideControlsTimer = nil;
-	}
+    if (hideControlsTimer) {
+        [hideControlsTimer invalidate];
+        hideControlsTimer = nil;
+    }
 
-	//TODO
+    //TODO
     /*if ([[PhoneMainView.instance currentView] equal:CallView.compositeViewDescription]) {
-		// show controls
-		[UIView beginAnimations:nil context:nil];
-		[UIView setAnimationDuration:0.35];
-		_pausedCallsTable.tableView.alpha = _videoCameraSwitch.alpha = _callPauseButton.alpha = _routesView.alpha =
-			_optionsView.alpha = _numpadView.alpha = _bottomBar.alpha = (hidden ? 0 : 1);
-		_infoView.alpha = (hidden ? 0 : .8f);
+        // show controls
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:0.35];
+        _pausedCallsTable.tableView.alpha = _videoCameraSwitch.alpha = _callPauseButton.alpha = _routesView.alpha =
+            _optionsView.alpha = _numpadView.alpha = _bottomBar.alpha = (hidden ? 0 : 1);
+        _infoView.alpha = (hidden ? 0 : .8f);
 
-		[UIView commitAnimations];
+        [UIView commitAnimations];
 
-		[PhoneMainView.instance hideTabBar:hidden];
-		[PhoneMainView.instance hideStatusBar:hidden];
+        [PhoneMainView.instance hideTabBar:hidden];
+        [PhoneMainView.instance hideStatusBar:hidden];
 
-		if (!hidden) {
-			// hide controls in 5 sec
-			hideControlsTimer = [NSTimer scheduledTimerWithTimeInterval:5.0
-																 target:self
-															   selector:@selector(timerHideControls:)
-															   userInfo:nil
-																repeats:NO];
-		}
-	}*/
+        if (!hidden) {
+            // hide controls in 5 sec
+            hideControlsTimer = [NSTimer scheduledTimerWithTimeInterval:5.0
+                                                                 target:self
+                                                               selector:@selector(timerHideControls:)
+                                                               userInfo:nil
+                                                                repeats:NO];
+        }
+    }*/
 }
 
 - (void)disableVideoDisplay:(BOOL)disabled animated:(BOOL)animation {
-	if (disabled == videoHidden && animation)
-		return;
-	videoHidden = disabled;
+    if (disabled == videoHidden && animation)
+        return;
+    videoHidden = disabled;
 
-	if (animation) {
-		[UIView beginAnimations:nil context:nil];
-		[UIView setAnimationDuration:1.0];
-	}
+    if (animation) {
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:1.0];
+    }
 
-	[_videoGroup setAlpha:disabled ? 0 : 1];
+    [_videoGroup setAlpha:disabled ? 0 : 1];
 
-	[self hideControls:!disabled sender:nil];
+    [self hideControls:!disabled sender:nil];
 
-	if (animation) {
-		[UIView commitAnimations];
-	}
+    if (animation) {
+        [UIView commitAnimations];
+    }
 
-	// only show camera switch button if we have more than 1 camera
-	_videoCameraSwitch.hidden = (disabled || ![[CallManager instance] getFrontCamId]);
-	_videoPreview.hidden = (disabled || !linphone_core_self_view_enabled([[CallManager instance] getCore]));
+    // only show camera switch button if we have more than 1 camera
+    _videoCameraSwitch.hidden = (disabled || ![[CallManager instance] getFrontCamId]);
+    _videoPreview.hidden = (disabled || !linphone_core_self_view_enabled([[CallManager instance] getCore]));
 
-	if (hideControlsTimer != nil) {
-		[hideControlsTimer invalidate];
-		hideControlsTimer = nil;
-	}
+    if (hideControlsTimer != nil) {
+        [hideControlsTimer invalidate];
+        hideControlsTimer = nil;
+    }
 
     //TODO
-	/*if(![PhoneMainView.instance isIphoneXDevice]){
-		[PhoneMainView.instance fullScreen:!disabled];
-	}
-	[PhoneMainView.instance hideTabBar:!disabled];*/
+    /*if(![PhoneMainView.instance isIphoneXDevice]){
+        [PhoneMainView.instance fullScreen:!disabled];
+    }
+    [PhoneMainView.instance hideTabBar:!disabled];*/
 
-	if (!disabled) {
+    if (!disabled) {
 #ifdef TEST_VIDEO_VIEW_CHANGE
-		[NSTimer scheduledTimerWithTimeInterval:5.0
-										 target:self
-									   selector:@selector(_debugChangeVideoView)
-									   userInfo:nil
-										repeats:YES];
+        [NSTimer scheduledTimerWithTimeInterval:5.0
+                                         target:self
+                                       selector:@selector(_debugChangeVideoView)
+                                       userInfo:nil
+                                        repeats:YES];
 #endif
-		// [self batteryLevelChanged:nil];
+        // [self batteryLevelChanged:nil];
 
-		[_videoWaitingForFirstImage setHidden:NO];
-		[_videoWaitingForFirstImage startAnimating];
+        [_videoWaitingForFirstImage setHidden:NO];
+        [_videoWaitingForFirstImage startAnimating];
 
-		LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
-		// linphone_call_params_get_used_video_codec return 0 if no video stream enabled
-		if (call != NULL && linphone_call_params_get_used_video_codec(linphone_call_get_current_params(call))) {
-			linphone_call_set_next_video_frame_decoded_callback(call, hideSpinner, (__bridge void *)(self));
-		}
-	}
+        LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
+        // linphone_call_params_get_used_video_codec return 0 if no video stream enabled
+        if (call != NULL && linphone_call_params_get_used_video_codec(linphone_call_get_current_params(call))) {
+            linphone_call_set_next_video_frame_decoded_callback(call, hideSpinner, (__bridge void *)(self));
+        }
+    }
 }
 
 - (void)displayVideoCall:(BOOL)animated {
-	[self disableVideoDisplay:FALSE animated:animated];
+    [self disableVideoDisplay:FALSE animated:animated];
 }
 
 - (void)displayAudioCall:(BOOL)animated {
-	[self disableVideoDisplay:TRUE animated:animated];
+    [self disableVideoDisplay:TRUE animated:animated];
 }
 
 - (void)callDurationUpdate {
-	int duration =
-		linphone_core_get_current_call([[CallManager instance] getCore]) ? linphone_call_get_duration(linphone_core_get_current_call([[CallManager instance] getCore])) : 0;
+    int duration =
+        linphone_core_get_current_call([[CallManager instance] getCore]) ? linphone_call_get_duration(linphone_core_get_current_call([[CallManager instance] getCore])) : 0;
     
     NSMutableString *result = [[NSMutableString alloc] init];
     if (duration / 3600 > 0) {
@@ -425,445 +404,419 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     }
     _durationLabel.text = [result stringByAppendingString:[NSString stringWithFormat:@"%02i:%02i", (duration / 60), (duration % 60)]];
 
-	//[_pausedCallsTable update];
-	//[_conferenceCallsTable update];
+    //[_pausedCallsTable update];
+    //[_conferenceCallsTable update];
 }
 
 - (void)onCurrentCallChange {
-	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
+    LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
 
-	_noActiveCallView.hidden = (call || linphone_core_is_in_conference([[CallManager instance] getCore]));
-	_callView.hidden = !call;
-	_conferenceView.hidden = !linphone_core_is_in_conference([[CallManager instance] getCore]);
-	_callPauseButton.hidden = !call && !linphone_core_is_in_conference([[CallManager instance] getCore]);
+    _noActiveCallView.hidden = (call || linphone_core_is_in_conference([[CallManager instance] getCore]));
+    _callView.hidden = !call;
+    _conferenceView.hidden = !linphone_core_is_in_conference([[CallManager instance] getCore]);
+    _callPauseButton.hidden = !call && !linphone_core_is_in_conference([[CallManager instance] getCore]);
 
-	[_callPauseButton setType:UIPauseButtonType_CurrentCall call:call];
-	[_conferencePauseButton setType:UIPauseButtonType_Conference call:call];
+    [_callPauseButton setType:UIPauseButtonType_CurrentCall call:call];
+    [_conferencePauseButton setType:UIPauseButtonType_Conference call:call];
 
-	if (!_callView.hidden) {
-		const LinphoneAddress *addr = linphone_call_get_remote_address(call);
-		//[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr];
-		char *uri = linphone_address_as_string_uri_only(addr);
-		ms_free(uri);
-		//[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:YES withRoundedRadius:YES];
-	}
+    if (!_callView.hidden) {
+        const LinphoneAddress *addr = linphone_call_get_remote_address(call);
+        //[ContactDisplay setDisplayNameLabel:_nameLabel forAddress:addr];
+        char *uri = linphone_address_as_string_uri_only(addr);
+        ms_free(uri);
+        //[_avatarImage setImage:[FastAddressBook imageForAddress:addr] bordered:YES withRoundedRadius:YES];
+    }
 }
 
 - (void)hidePad:(BOOL)hidden animated:(BOOL)animated {
-	if (hidden) {
-		[_numpadButton setOff];
-	} else {
-		[_numpadButton setOn];
-	}
-	if (hidden != _numpadView.hidden) {
-		if (animated) {
-			[self hideAnimation:hidden forView:_numpadView completion:nil];
-		} else {
-			[_numpadView setHidden:hidden];
-		}
-	}
+    if (hidden) {
+        [_numpadButton setOff];
+    } else {
+        [_numpadButton setOn];
+    }
+    if (hidden != _numpadView.hidden) {
+        if (animated) {
+            [self hideAnimation:hidden forView:_numpadView completion:nil];
+        } else {
+            [_numpadView setHidden:hidden];
+        }
+    }
 }
 
 - (void)hideRoutes:(BOOL)hidden animated:(BOOL)animated {
-	if (hidden) {
-		[_routesButton setOff];
-	} else {
-		[_routesButton setOn];
-	}
+    if (hidden) {
+        [_routesButton setOff];
+    } else {
+        [_routesButton setOn];
+    }
 
-	_routesBluetoothButton.selected = [CallManager.instance isBluetoothEnabled];
-	_routesSpeakerButton.selected = [CallManager.instance isSpeakerEnabled];
-	_routesEarpieceButton.selected = !_routesBluetoothButton.selected && !_routesSpeakerButton.selected;
+    _routesBluetoothButton.selected = [CallManager.instance isBluetoothEnabled];
+    _routesSpeakerButton.selected = [CallManager.instance isSpeakerEnabled];
+    _routesEarpieceButton.selected = !_routesBluetoothButton.selected && !_routesSpeakerButton.selected;
 
-	if (hidden != _routesView.hidden) {
-		if (animated) {
-			[self hideAnimation:hidden forView:_routesView completion:nil];
-		} else {
-			[_routesView setHidden:hidden];
-		}
-	}
-}
-
-- (void)hideOptions:(BOOL)hidden animated:(BOOL)animated {
-	if (hidden) {
-		[_optionsButton setOff];
-	} else {
-		[_optionsButton setOn];
-	}
-	if (hidden != _optionsView.hidden) {
-		if (animated) {
-			[self hideAnimation:hidden forView:_optionsView completion:nil];
-		} else {
-			[_optionsView setHidden:hidden];
-		}
-	}
+    if (hidden != _routesView.hidden) {
+        if (animated) {
+            [self hideAnimation:hidden forView:_routesView completion:nil];
+        } else {
+            [_routesView setHidden:hidden];
+        }
+    }
 }
 
 - (void)hideSpeaker:(BOOL)hidden {
-	_speakerButton.hidden = hidden;
-	_routesButton.hidden = !hidden;
+    _speakerButton.hidden = hidden;
+    _routesButton.hidden = !hidden;
 }
 
 #pragma mark - Event Functions
 
 - (void)bluetoothAvailabilityUpdateEvent:(NSNotification *)notif {
-	bool available = [[notif.userInfo objectForKey:@"available"] intValue];
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self hideSpeaker:available];
-	});
+    bool available = [[notif.userInfo objectForKey:@"available"] intValue];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self hideSpeaker:available];
+    });
 }
 
 - (void)callUpdateEvent:(NSNotification *)notif {
-	LinphoneCall *call = [[notif.userInfo objectForKey:@"call"] pointerValue];
-	LinphoneCallState state = [[notif.userInfo objectForKey:@"state"] intValue];
-	[self callUpdate:call state:state animated:TRUE];
+    LinphoneCall *call = [[notif.userInfo objectForKey:@"call"] pointerValue];
+    LinphoneCallState state = [[notif.userInfo objectForKey:@"state"] intValue];
+    [self callUpdate:call state:state animated:TRUE];
 }
 
 - (void)callUpdate:(LinphoneCall *)call state:(LinphoneCallState)state animated:(BOOL)animated {
-	[self updateBottomBar:call state:state];
-	if (hiddenVolume) {
+    [self updateBottomBar:call state:state];
+    if (hiddenVolume) {
         //TODO
-		//[PhoneMainView.instance setVolumeHidden:FALSE];
-		hiddenVolume = FALSE;
-	}
+        //[PhoneMainView.instance setVolumeHidden:FALSE];
+        hiddenVolume = FALSE;
+    }
 
-	// Update tables
-	//[_pausedCallsTable update];
-	//[_conferenceCallsTable update];
+    // Update tables
+    //[_pausedCallsTable update];
+    //[_conferenceCallsTable update];
 
-	static LinphoneCall *currentCall = NULL;
-	if (!currentCall || linphone_core_get_current_call([[CallManager instance] getCore]) != currentCall) {
-		currentCall = linphone_core_get_current_call([[CallManager instance] getCore]);
-		[self onCurrentCallChange];
-	}
+    static LinphoneCall *currentCall = NULL;
+    if (!currentCall || linphone_core_get_current_call([[CallManager instance] getCore]) != currentCall) {
+        currentCall = linphone_core_get_current_call([[CallManager instance] getCore]);
+        [self onCurrentCallChange];
+    }
 
-	// Fake call update
-	if (call == NULL) {
-		return;
-	}
+    // Fake call update
+    if (call == NULL) {
+        return;
+    }
 
-	BOOL shouldDisableVideo = !currentCall || !linphone_call_params_video_enabled(linphone_call_get_current_params(currentCall));
-	if (videoHidden != shouldDisableVideo) {
-		if (!shouldDisableVideo) {
-			[self displayVideoCall:animated];
-		} else {
-			[self displayAudioCall:animated];
-		}
-	}
+    BOOL shouldDisableVideo = !currentCall || !linphone_call_params_video_enabled(linphone_call_get_current_params(currentCall));
+    if (videoHidden != shouldDisableVideo) {
+        if (!shouldDisableVideo) {
+            [self displayVideoCall:animated];
+        } else {
+            [self displayAudioCall:animated];
+        }
+    }
     
     if (!shouldDisableVideo && !linphone_core_is_in_conference([[CallManager instance] getCore]) && // camera is diabled duiring conference, it must be activated after leaving conference.
-		[UIApplication sharedApplication].applicationState == UIApplicationStateActive) { // Camera should not be enabled when in background)
+        [UIApplication sharedApplication].applicationState == UIApplicationStateActive) { // Camera should not be enabled when in background)
         linphone_call_enable_camera(call, TRUE);
     }
     [self updateCallView];
 
-	if (state != LinphoneCallPausedByRemote) {
-		_pausedByRemoteView.hidden = YES;
-	}
+    if (state != LinphoneCallPausedByRemote) {
+        _pausedByRemoteView.hidden = YES;
+    }
 
-	switch (state) {
-		case LinphoneCallIncomingReceived:
-		case LinphoneCallOutgoingInit:
-		case LinphoneCallConnected:
-		case LinphoneCallStreamsRunning: {
-			// check video, because video can be disabled because of the low bandwidth.
-			if (!linphone_call_params_video_enabled(linphone_call_get_current_params(call))) {
-				const LinphoneCallParams *param = linphone_call_get_current_params(call);
-				CallAppData *data = [CallManager getAppDataWithCall:call];
-				if (state == LinphoneCallStreamsRunning && data && data.videoRequested && linphone_call_params_low_bandwidth_enabled(param)) {
-					// too bad video was not enabled because low bandwidth
-					UIAlertController *errView = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Low bandwidth", nil)
-																					 message:NSLocalizedString(@"Video cannot be activated because of low bandwidth "
-																											   @"condition, only audio is available",
-																											   nil)
-																			  preferredStyle:UIAlertControllerStyleAlert];
-						
-					UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Continue", nil)
-																			style:UIAlertActionStyleDefault
-																		  handler:^(UIAlertAction * action) {}];
-						
-					[errView addAction:defaultAction];
-					[self presentViewController:errView animated:YES completion:nil];
-					data.videoRequested = FALSE;
-					[CallManager setAppDataWithCall:call appData:data];
-				}
-			}
-			break;
-		}
-		case LinphoneCallUpdatedByRemote: {
-			const LinphoneCallParams *current = linphone_call_get_current_params(call);
-			const LinphoneCallParams *remote = linphone_call_get_remote_params(call);
+    switch (state) {
+        case LinphoneCallIncomingReceived:
+        case LinphoneCallOutgoingInit:
+        case LinphoneCallConnected:
+        case LinphoneCallStreamsRunning: {
+            // check video, because video can be disabled because of the low bandwidth.
+            if (!linphone_call_params_video_enabled(linphone_call_get_current_params(call))) {
+                const LinphoneCallParams *param = linphone_call_get_current_params(call);
+                CallAppData *data = [CallManager getAppDataWithCall:call];
+                if (state == LinphoneCallStreamsRunning && data && data.videoRequested && linphone_call_params_low_bandwidth_enabled(param)) {
+                    // too bad video was not enabled because low bandwidth
+                    UIAlertController *errView = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Low bandwidth", nil)
+                                                                                     message:NSLocalizedString(@"Video cannot be activated because of low bandwidth "
+                                                                                                               @"condition, only audio is available",
+                                                                                                               nil)
+                                                                              preferredStyle:UIAlertControllerStyleAlert];
+                        
+                    UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Continue", nil)
+                                                                            style:UIAlertActionStyleDefault
+                                                                          handler:^(UIAlertAction * action) {}];
+                        
+                    [errView addAction:defaultAction];
+                    [self presentViewController:errView animated:YES completion:nil];
+                    data.videoRequested = FALSE;
+                    [CallManager setAppDataWithCall:call appData:data];
+                }
+            }
+            break;
+        }
+        case LinphoneCallUpdatedByRemote: {
+            const LinphoneCallParams *current = linphone_call_get_current_params(call);
+            const LinphoneCallParams *remote = linphone_call_get_remote_params(call);
 
-			/* remote wants to add video */
-			if ((linphone_core_video_display_enabled([[CallManager instance] getCore]) && !linphone_call_params_video_enabled(current) &&
-				 linphone_call_params_video_enabled(remote)) &&
-				(!linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept ||
-				 (([UIApplication sharedApplication].applicationState != UIApplicationStateActive) &&
-				  floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_9_x_Max))) {
-				linphone_core_defer_call_update([[CallManager instance] getCore], call);
-				[self displayAskToEnableVideoCall:call];
-			} else if (linphone_call_params_video_enabled(current) && !linphone_call_params_video_enabled(remote)) {
-				[self displayAudioCall:animated];
-			}
-			break;
-		}
-		case LinphoneCallPausing:
-		case LinphoneCallPaused:
-			[self displayAudioCall:animated];
-			break;
-		case LinphoneCallPausedByRemote:
-			[self displayAudioCall:animated];
-			if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
-				_pausedByRemoteView.hidden = NO;
-				[self updateInfoView:TRUE];
-			}
-			break;
-		case LinphoneCallEnd:
-		case LinphoneCallError:
-		default:
-			break;
-	}
+            /* remote wants to add video */
+            if ((linphone_core_video_display_enabled([[CallManager instance] getCore]) && !linphone_call_params_video_enabled(current) &&
+                 linphone_call_params_video_enabled(remote)) &&
+                (!linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept ||
+                 (([UIApplication sharedApplication].applicationState != UIApplicationStateActive) &&
+                  floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_9_x_Max))) {
+                linphone_core_defer_call_update([[CallManager instance] getCore], call);
+                [self displayAskToEnableVideoCall:call];
+            } else if (linphone_call_params_video_enabled(current) && !linphone_call_params_video_enabled(remote)) {
+                [self displayAudioCall:animated];
+            }
+            break;
+        }
+        case LinphoneCallPausing:
+        case LinphoneCallPaused:
+            [self displayAudioCall:animated];
+            break;
+        case LinphoneCallPausedByRemote:
+            [self displayAudioCall:animated];
+            if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
+                _pausedByRemoteView.hidden = NO;
+                [self updateInfoView:TRUE];
+            }
+            break;
+        case LinphoneCallEnd:
+        case LinphoneCallError:
+        default:
+            break;
+    }
 }
 
 #pragma mark - ActionSheet Functions
 
 - (void)displayAskToEnableVideoCall:(LinphoneCall *)call {
-	if (linphone_call_params_get_local_conference_mode(linphone_call_get_current_params(call))) {
-		return;
-	}
-	if (linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept &&
-		!([UIApplication sharedApplication].applicationState != UIApplicationStateActive))
-		return;
+    if (linphone_call_params_get_local_conference_mode(linphone_call_get_current_params(call))) {
+        return;
+    }
+    if (linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept &&
+        !([UIApplication sharedApplication].applicationState != UIApplicationStateActive))
+        return;
 
     NSString *username =[NSString stringWithUTF8String:linphone_address_get_display_name(linphone_call_get_remote_address(call))];
-	NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%@ would like to enable video", nil), username];
-	if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive &&
-		floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_9_x_Max) {
-		UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-		content.title = NSLocalizedString(@"Video request", nil);
-		content.body = title;
-		content.categoryIdentifier = @"video_request";
-		content.userInfo = @{
-			@"CallId" : [NSString stringWithUTF8String:linphone_call_log_get_call_id(linphone_call_get_call_log(call))]
-		};
+    NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%@ would like to enable video", nil), username];
+    if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive &&
+        floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_9_x_Max) {
+        UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+        content.title = NSLocalizedString(@"Video request", nil);
+        content.body = title;
+        content.categoryIdentifier = @"video_request";
+        content.userInfo = @{
+            @"CallId" : [NSString stringWithUTF8String:linphone_call_log_get_call_id(linphone_call_get_call_log(call))]
+        };
 
-		UNNotificationRequest *req =
-			[UNNotificationRequest requestWithIdentifier:@"video_request" content:content trigger:NULL];
-		[[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:req
-															   withCompletionHandler:^(NSError *_Nullable error) {
-																 // Enable or disable features based on authorization.
-																 if (error) {
+        UNNotificationRequest *req =
+            [UNNotificationRequest requestWithIdentifier:@"video_request" content:content trigger:NULL];
+        [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:req
+                                                               withCompletionHandler:^(NSError *_Nullable error) {
+                                                                 // Enable or disable features based on authorization.
+                                                                 if (error) {
                                                                      //LOGD(@"Error while adding notification request :");
                                                                      //LOGD(error.description);
-																 }
-															   }];
-	} else {
-		UIConfirmationDialog *sheet = [UIConfirmationDialog ShowWithMessage:title
-			cancelMessage:nil
-			confirmMessage:NSLocalizedString(@"ACCEPT", nil)
-			onCancelClick:^() {
+                                                                 }
+                                                               }];
+    } else {
+        UIConfirmationDialog *sheet = [UIConfirmationDialog ShowWithMessage:title
+            cancelMessage:nil
+            confirmMessage:NSLocalizedString(@"ACCEPT", nil)
+            onCancelClick:^() {
             //LOGI(@"User declined video proposal");
-			  if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
-				  [CallManager.instance acceptVideoWithCall:call confirm:FALSE];
-				  [videoDismissTimer invalidate];
-				  videoDismissTimer = nil;
-			  }
-			}
-			onConfirmationClick:^() {
+              if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
+                  [CallManager.instance acceptVideoWithCall:call confirm:FALSE];
+                  [videoDismissTimer invalidate];
+                  videoDismissTimer = nil;
+              }
+            }
+            onConfirmationClick:^() {
             //LOGI(@"User accept video proposal");
-			  if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
-				  [CallManager.instance acceptVideoWithCall:call confirm:TRUE];
-				  [videoDismissTimer invalidate];
-				  videoDismissTimer = nil;
-			  }
-			}
-			inController:self];
-		videoDismissTimer = [NSTimer scheduledTimerWithTimeInterval:30
-															 target:self
-														   selector:@selector(dismissVideoActionSheet:)
-														   userInfo:sheet
-															repeats:NO];
-	}
+              if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
+                  [CallManager.instance acceptVideoWithCall:call confirm:TRUE];
+                  [videoDismissTimer invalidate];
+                  videoDismissTimer = nil;
+              }
+            }
+            inController:self];
+        videoDismissTimer = [NSTimer scheduledTimerWithTimeInterval:30
+                                                             target:self
+                                                           selector:@selector(dismissVideoActionSheet:)
+                                                           userInfo:sheet
+                                                            repeats:NO];
+    }
 }
 
 - (void)dismissVideoActionSheet:(NSTimer *)timer {
-	UIConfirmationDialog *sheet = (UIConfirmationDialog *)timer.userInfo;
-	[sheet dismiss];
+    UIConfirmationDialog *sheet = (UIConfirmationDialog *)timer.userInfo;
+    [sheet dismiss];
 }
 
 #pragma mark VideoPreviewMoving
 
 - (void)moveVideoPreview:(UIPanGestureRecognizer *)dragndrop {
-	CGPoint center = [dragndrop locationInView:_videoPreview.superview];
-	_videoPreview.center = center;
-	if (dragndrop.state == UIGestureRecognizerStateEnded) {
-		[self previewTouchLift];
-	}
+    CGPoint center = [dragndrop locationInView:_videoPreview.superview];
+    _videoPreview.center = center;
+    if (dragndrop.state == UIGestureRecognizerStateEnded) {
+        [self previewTouchLift];
+    }
 }
 
 - (CGFloat)coerce:(CGFloat)value betweenMin:(CGFloat)min andMax:(CGFloat)max {
-	return MAX(min, MIN(value, max));
+    return MAX(min, MIN(value, max));
 }
 
 - (void)previewTouchLift {
-	CGRect previewFrame = _videoPreview.frame;
-	previewFrame.origin.x = [self coerce:previewFrame.origin.x
-							  betweenMin:5
-								  andMax:(UIScreen.mainScreen.bounds.size.width - 5 - previewFrame.size.width)];
-	previewFrame.origin.y = [self coerce:previewFrame.origin.y
-							  betweenMin:5
-								  andMax:(UIScreen.mainScreen.bounds.size.height - 5 - previewFrame.size.height)];
+    CGRect previewFrame = _videoPreview.frame;
+    previewFrame.origin.x = [self coerce:previewFrame.origin.x
+                              betweenMin:5
+                                  andMax:(UIScreen.mainScreen.bounds.size.width - 5 - previewFrame.size.width)];
+    previewFrame.origin.y = [self coerce:previewFrame.origin.y
+                              betweenMin:5
+                                  andMax:(UIScreen.mainScreen.bounds.size.height - 5 - previewFrame.size.height)];
 
-	if (!CGRectEqualToRect(previewFrame, _videoPreview.frame)) {
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		  [UIView animateWithDuration:0.3
-						   animations:^{
+    if (!CGRectEqualToRect(previewFrame, _videoPreview.frame)) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+          [UIView animateWithDuration:0.3
+                           animations:^{
               //LOGD(@"Recentering preview to %@", NSStringFromCGRect(previewFrame));
-							 _videoPreview.frame = previewFrame;
-						   }];
-		});
-	}
+                             _videoPreview.frame = previewFrame;
+                           }];
+        });
+    }
 }
 
 #pragma mark - Action Functions
 
 - (IBAction)onNumpadClick:(id)sender {
-	if ([_numpadView isHidden]) {
-		[self hidePad:FALSE animated:YES];
-	} else {
-		[self hidePad:TRUE animated:YES];
-	}
-}
-
-- (IBAction)onRecordClick:(id)sender {
-    if (![_optionsView isHidden])
-        [self hideOptions:TRUE animated:YES];
-    if (callRecording) {
-		[self onRecordOnViewClick:nil];
+    if ([_numpadView isHidden]) {
+        [self hidePad:FALSE animated:YES];
     } else {
-        //LOGD(@"Recording Starts");
-        
-        [_recordButton setImage:[UIImage imageNamed:@"rec_off_default.png"] forState:UIControlStateNormal];
-        [_recordButtonOnView setHidden:FALSE];
-        
-        LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
-        linphone_call_start_recording(call);
-        
-        callRecording = TRUE;
+        [self hidePad:TRUE animated:YES];
     }
 }
 
-- (IBAction)onRecordOnViewClick:(id)sender {
-    //LOGD(@"Recording Stops");
-	[_recordButton setImage:[UIImage imageNamed:@"rec_on_default.png"] forState:UIControlStateNormal];
-	[_recordButtonOnView setHidden:TRUE];
-	
-	LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
-	linphone_call_stop_recording(call);
-	
-	callRecording = FALSE;
-	
-	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-	NSString *writablePath = [paths objectAtIndex:0];
-	writablePath = [writablePath stringByAppendingString:@"/"];
-	NSArray *directoryContent = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:writablePath error:NULL];
-	if (directoryContent) {
-		return;
-	}
-}
-
 - (IBAction)onRoutesBluetoothClick:(id)sender {
-	[self hideRoutes:TRUE animated:TRUE];
-	[CallManager.instance changeRouteToBluetooth];
+    [self hideRoutes:TRUE animated:TRUE];
+    [CallManager.instance changeRouteToBluetooth];
 }
 
 - (IBAction)onRoutesEarpieceClick:(id)sender {
-	[self hideRoutes:TRUE animated:TRUE];
-	[CallManager.instance changeRouteToDefault];
+    [self hideRoutes:TRUE animated:TRUE];
+    [CallManager.instance changeRouteToDefault];
 }
 
 - (IBAction)onRoutesSpeakerClick:(id)sender {
-	[self hideRoutes:TRUE animated:TRUE];
-	[CallManager.instance changeRouteToSpeaker];
+    [self hideRoutes:TRUE animated:TRUE];
+    [CallManager.instance changeRouteToSpeaker];
 }
 
 - (IBAction)onRoutesClick:(id)sender {
-	if ([_routesView isHidden]) {
-		[self hideRoutes:FALSE animated:YES];
-	} else {
-		[self hideRoutes:TRUE animated:YES];
-	}
+    if ([_routesView isHidden]) {
+        [self hideRoutes:FALSE animated:YES];
+    } else {
+        [self hideRoutes:TRUE animated:YES];
+    }
 }
 
-- (IBAction)onOptionsClick:(id)sender {
-	if ([_optionsView isHidden]) {
-		[self hideOptions:FALSE animated:YES];
-	} else {
-		[self hideOptions:TRUE animated:YES];
-	}
+
+-(void)enableCustomButton2{
+    
+    [[self customButton2] setUserInteractionEnabled:YES];
+}
+
+
+- (IBAction)onCustomButton2Click:(id)sender {
+    NSError *error;
+    NSData *objectData = [[self dmftConfiguration] dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData:objectData options:NSJSONReadingMutableContainers error:&error];
+    NSString *sequence = [json objectForKey:@"sequence"];
+    NSNumber *cooldownTime  = [json objectForKey:@"cooldownTime"];
+    [[self customButton2] setUserInteractionEnabled:NO];
+    [NSTimer scheduledTimerWithTimeInterval:cooldownTime.doubleValue target:self selector:@selector(enableCustomButton2) userInfo:nil repeats:NO];
+    for (int i = 0; i < [sequence length]; i++) {
+        char key = [sequence characterAtIndex:i];
+        if (key == ',') {
+            [NSThread sleepForTimeInterval:1.0f];
+            continue;
+        }
+        int result = linphone_call_send_dtmf(linphone_core_get_current_call([[CallManager instance] getCore]), key);
+        linphone_core_play_dtmf([[CallManager instance] getCore], key, 100);
+        if (result == 0) {
+            printf("%s", [json objectForKey:@"successMessage"]);
+        }else{
+            printf("%s", [json objectForKey:@"failMessage"]);
+        }
+
+    }
+    //Log.e(Linphone.TAG,input.getString("failMessage"));
+    //Log.i(Linphone.TAG,input.getString("successMessage"));
 }
 /*
 - (IBAction)onOptionsTransferClick:(id)sender {
-	[self hideOptions:TRUE animated:TRUE];
-	DialerView *view = VIEW(DialerView);
-	[view setAddress:@""];
-	CallManager.instance.nextCallIsTransfer = TRUE;
-	[PhoneMainView.instance changeCurrentView:view.compositeViewDescription];
+    [self hideOptions:TRUE animated:TRUE];
+    DialerView *view = VIEW(DialerView);
+    [view setAddress:@""];
+    CallManager.instance.nextCallIsTransfer = TRUE;
+    [PhoneMainView.instance changeCurrentView:view.compositeViewDescription];
 }
 
 - (IBAction)onOptionsAddClick:(id)sender {
-	[self hideOptions:TRUE animated:TRUE];
-	DialerView *view = VIEW(DialerView);
-	[view setAddress:@""];
-	CallManager.instance.nextCallIsTransfer = FALSE;
-	[PhoneMainView.instance changeCurrentView:view.compositeViewDescription];
+    [self hideOptions:TRUE animated:TRUE];
+    DialerView *view = VIEW(DialerView);
+    [view setAddress:@""];
+    CallManager.instance.nextCallIsTransfer = FALSE;
+    [PhoneMainView.instance changeCurrentView:view.compositeViewDescription];
 }
 
 - (IBAction)onOptionsConferenceClick:(id)sender {
-	[self hideOptions:TRUE animated:TRUE];
-	[CallManager.instance groupCall];
+    [self hideOptions:TRUE animated:TRUE];
+    [CallManager.instance groupCall];
 }*/
 
 #pragma mark - Animation
 
 - (void)hideAnimation:(BOOL)hidden forView:(UIView *)target completion:(void (^)(BOOL finished))completion {
-	if (hidden) {
-	int original_y = target.frame.origin.y;
-	CGRect newFrame = target.frame;
-	newFrame.origin.y = self.view.frame.size.height;
-	[UIView animateWithDuration:0.5
-		delay:0.0
-		options:UIViewAnimationOptionCurveEaseIn
-		animations:^{
-		  target.frame = newFrame;
-		}
-		completion:^(BOOL finished) {
-		  CGRect originFrame = target.frame;
-		  originFrame.origin.y = original_y;
-		  target.hidden = YES;
-		  target.frame = originFrame;
-		  if (completion)
-			  completion(finished);
-		}];
-	} else {
-		CGRect frame = target.frame;
-		int original_y = frame.origin.y;
-		frame.origin.y = self.view.frame.size.height;
-		target.frame = frame;
-		frame.origin.y = original_y;
-		target.hidden = NO;
+    if (hidden) {
+    int original_y = target.frame.origin.y;
+    CGRect newFrame = target.frame;
+    newFrame.origin.y = self.view.frame.size.height;
+    [UIView animateWithDuration:0.5
+        delay:0.0
+        options:UIViewAnimationOptionCurveEaseIn
+        animations:^{
+          target.frame = newFrame;
+        }
+        completion:^(BOOL finished) {
+          CGRect originFrame = target.frame;
+          originFrame.origin.y = original_y;
+          target.hidden = YES;
+          target.frame = originFrame;
+          if (completion)
+              completion(finished);
+        }];
+    } else {
+        CGRect frame = target.frame;
+        int original_y = frame.origin.y;
+        frame.origin.y = self.view.frame.size.height;
+        target.frame = frame;
+        frame.origin.y = original_y;
+        target.hidden = NO;
 
-		[UIView animateWithDuration:0.5
-			delay:0.0
-			options:UIViewAnimationOptionCurveEaseOut
-			animations:^{
-			  target.frame = frame;
-			}
-			completion:^(BOOL finished) {
-			  target.frame = frame; // in case application did not finish
-			  if (completion)
-				  completion(finished);
-			}];
-	}
+        [UIView animateWithDuration:0.5
+            delay:0.0
+            options:UIViewAnimationOptionCurveEaseOut
+            animations:^{
+              target.frame = frame;
+            }
+            completion:^(BOOL finished) {
+              target.frame = frame; // in case application did not finish
+              if (completion)
+                  completion(finished);
+            }];
+    }
 }
 @end

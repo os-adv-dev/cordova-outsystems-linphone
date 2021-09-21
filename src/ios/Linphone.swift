@@ -33,6 +33,7 @@ var login: Bool = false
     var callIncomingView: CallIncomingView!
     var callView: CallView!
     var callOutgoingView: CallOutgoingView!
+    var dmftConfig: String = ""
         
     override func pluginInitialize() {
         
@@ -188,6 +189,9 @@ var login: Bool = false
         } catch {
             print(error)
         }
+    }
+    @objc(setCustomButton2:)func setCustomButton2(command : CDVInvokedUrlCommand){
+        dmftConfig = command.argument(at: 0) as! String;
     }
     
     @objc(disconnect:)func disconnect(command : CDVInvokedUrlCommand){
@@ -350,6 +354,7 @@ var login: Bool = false
                     callOutgoingView = nil
                 }
                 callView = CallView()
+                callView.dmftConfiguration = dmftConfig
                 viewController.present(callView, animated: true, completion: nil)
             }
         case .End:

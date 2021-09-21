@@ -17,6 +17,7 @@
                 <outlet property="conferenceCallsTable" destination="sif-q0-7oE" id="Fjr-dB-s4q"/>
                 <outlet property="conferencePauseButton" destination="HAk-mv-6sG" id="SJg-ew-UIZ"/>
                 <outlet property="conferenceView" destination="0Ju-u5-N7A" id="H5K-Nv-IKI"/>
+                <outlet property="customButton2" destination="8Zx-MI-pUL" id="yW6-NN-YNW"/>
                 <outlet property="durationLabel" destination="Oy8-QO-Jwb" id="mUT-TX-gLp"/>
                 <outlet property="eightButton" destination="DRh-kc-UVM" id="BPp-sh-qBg"/>
                 <outlet property="fiveButton" destination="8Da-zK-V7e" id="URc-Ct-fu0"/>
@@ -31,14 +32,8 @@
                 <outlet property="numpadButton" destination="SRu-dB-r3e" id="Y2q-lE-f89"/>
                 <outlet property="numpadView" destination="ukG-i4-YMY" id="f2R-OM-ahP"/>
                 <outlet property="oneButton" destination="qZ8-m9-B0N" id="eOL-0X-pTJ"/>
-                <outlet property="optionsAddButton" destination="reb-7F-UDV" id="csG-P2-Td5"/>
-                <outlet property="optionsButton" destination="8Zx-MI-pUL" id="MVL-le-Ycm"/>
-                <outlet property="optionsConferenceButton" destination="06a-kv-hpZ" id="C57-v7-1C5"/>
-                <outlet property="optionsTransferButton" destination="S0k-bn-1bs" id="2fo-RR-nKy"/>
-                <outlet property="optionsView" destination="sHZ-53-Hta" id="HjK-Gc-HB2"/>
                 <outlet property="pausedByRemoteView" destination="0MR-ml-8RY" id="fzQ-lE-Tny"/>
                 <outlet property="pausedCallsTable" destination="162" id="ffv-xP-AXk"/>
-                <outlet property="recordButton" destination="MAI-av-LMz" id="2Gn-na-dF2"/>
                 <outlet property="routesBluetoothButton" destination="6uv-FV-mUL" id="c0F-7q-0m5"/>
                 <outlet property="routesButton" destination="nQp-5y-kTy" id="2u8-g5-6T1"/>
                 <outlet property="routesEarpieceButton" destination="jSA-bD-bCs" id="eeO-dk-84D"/>
@@ -458,76 +453,6 @@
                                 </button>
                             </subviews>
                         </view>
-                        <view hidden="YES" tag="42" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sHZ-53-Hta" userLabel="optionsView">
-                            <rect key="frame" x="282" y="235" width="94" height="264"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <subviews>
-                                <imageView userInteractionEnabled="NO" tag="43" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="color_F.png" translatesAutoresizingMaskIntoConstraints="NO" id="WcD-wQ-0ml" userLabel="backgroundColor">
-                                    <rect key="frame" x="0.0" y="0.0" width="94" height="264"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                                </imageView>
-                                <button opaque="NO" tag="44" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="06a-kv-hpZ" userLabel="optionConferenceButton" customClass="UIIconButton">
-                                    <rect key="frame" x="0.0" y="0.0" width="94" height="66"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    <accessibility key="accessibilityConfiguration" label="Start conference"/>
-                                    <state key="normal" image="options_start_conference_default.png">
-                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="disabled" image="options_start_conference_disabled.png"/>
-                                    <state key="highlighted" backgroundImage="color_E.png"/>
-                                    <connections>
-                                        <action selector="onOptionsConferenceClick:" destination="-1" eventType="touchUpInside" id="bQP-ga-R2R"/>
-                                    </connections>
-                                </button>
-                                <button opaque="NO" tag="45" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="reb-7F-UDV" userLabel="optionsAddButton">
-                                    <rect key="frame" x="0.0" y="66" width="94" height="66"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                    <accessibility key="accessibilityConfiguration" label="Add call"/>
-                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                    <inset key="titleEdgeInsets" minX="0.0" minY="28" maxX="0.0" maxY="0.0"/>
-                                    <state key="normal" image="options_add_call_default.png">
-                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="disabled" image="options_add_call_disabled.png">
-                                        <color key="titleColor" red="0.58667385578155518" green="0.64151597023010254" blue="0.69586050510406494" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="highlighted" backgroundImage="color_E.png"/>
-                                    <connections>
-                                        <action selector="onOptionsAddClick:" destination="-1" eventType="touchUpInside" id="diW-wF-VRO"/>
-                                    </connections>
-                                </button>
-                                <button opaque="NO" tag="46" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="S0k-bn-1bs" userLabel="optionsTransferButton">
-                                    <rect key="frame" x="0.0" y="132" width="94" height="66"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                    <accessibility key="accessibilityConfiguration" label="Transfer call"/>
-                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
-                                    <inset key="titleEdgeInsets" minX="0.0" minY="28" maxX="0.0" maxY="0.0"/>
-                                    <state key="normal" image="options_transfer_call_default.png">
-                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="disabled" image="options_transfer_call_disabled.png">
-                                        <color key="titleColor" red="0.58667385578155518" green="0.64151597023010254" blue="0.69586050510406494" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="highlighted" backgroundImage="color_E.png"/>
-                                    <connections>
-                                        <action selector="onOptionsTransferClick:" destination="-1" eventType="touchUpInside" id="lJX-ud-MuS"/>
-                                    </connections>
-                                </button>
-                                <button opaque="NO" tag="44" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MAI-av-LMz" userLabel="recordButton" customClass="UIIconButton">
-                                    <rect key="frame" x="0.0" y="198" width="94" height="66"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                    <accessibility key="accessibilityConfiguration" label="Start conference"/>
-                                    <state key="normal" image="rec_on_default.png">
-                                        <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </state>
-                                    <state key="disabled" image="options_start_conference_disabled.png"/>
-                                    <state key="highlighted" backgroundImage="color_E.png"/>
-                                    <connections>
-                                        <action selector="onRecordClick:" destination="-1" eventType="touchUpInside" id="8fZ-A1-ula"/>
-                                    </connections>
-                                </button>
-                            </subviews>
-                        </view>
                         <view tag="47" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mga-O5-mUn" userLabel="bottomBar">
                             <rect key="frame" x="0.0" y="499" width="375" height="126"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
@@ -598,10 +523,12 @@
                                                 <action selector="onRoutesClick:" destination="-1" eventType="touchUpInside" id="h2V-qf-kgC"/>
                                             </connections>
                                         </button>
-                                        <button opaque="NO" tag="55" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8Zx-MI-pUL" userLabel="optionsButton" customClass="UIToggleButton">
+                                        <button opaque="NO" tag="55" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8Zx-MI-pUL" userLabel="CustomButton2" customClass="UIIconButton">
                                             <rect key="frame" x="282" y="0.0" width="94" height="63"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                                            <accessibility key="accessibilityConfiguration" label="Options"/>
+                                            <accessibility key="accessibilityConfiguration" label="Options">
+                                                <bool key="isElement" value="YES"/>
+                                            </accessibility>
                                             <inset key="titleEdgeInsets" minX="0.0" minY="38" maxX="0.0" maxY="0.0"/>
                                             <state key="normal" image="options_default.png">
                                                 <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -610,6 +537,7 @@
                                             <state key="selected" image="options_selected.png"/>
                                             <state key="highlighted" backgroundImage="color_E.png"/>
                                             <connections>
+                                                <action selector="onCustomButton2Click:" destination="-1" eventType="touchUpInside" id="fOH-0O-FT3"/>
                                                 <action selector="onOptionsClick:" destination="-1" eventType="touchUpInside" id="KZw-2M-V7E"/>
                                             </connections>
                                         </button>
@@ -713,19 +641,12 @@
         <image name="numpad_over_background.png" width="2" height="2"/>
         <image name="numpad_star_default.png" width="84.800003051757812" height="81.599998474121094"/>
         <image name="numpad_star_over.png" width="84.800003051757812" height="81.599998474121094"/>
-        <image name="options_add_call_default.png" width="48" height="48.799999237060547"/>
-        <image name="options_add_call_disabled.png" width="48" height="48.799999237060547"/>
         <image name="options_default.png" width="41.599998474121094" height="41.599998474121094"/>
         <image name="options_disabled.png" width="41.599998474121094" height="41.599998474121094"/>
         <image name="options_selected.png" width="41.599998474121094" height="41.599998474121094"/>
-        <image name="options_start_conference_default.png" width="53.599998474121094" height="53.599998474121094"/>
-        <image name="options_start_conference_disabled.png" width="53.599998474121094" height="53.599998474121094"/>
-        <image name="options_transfer_call_default.png" width="48" height="48.799999237060547"/>
-        <image name="options_transfer_call_disabled.png" width="48" height="48.799999237060547"/>
         <image name="pause_big_default.png" width="83.199996948242188" height="81.599998474121094"/>
         <image name="pause_big_disabled.png" width="83.199996948242188" height="81.599998474121094"/>
         <image name="pause_big_over_selected.png" width="83.199996948242188" height="81.599998474121094"/>
-        <image name="rec_on_default.png" width="28.799999237060547" height="44.799999237060547"/>
         <image name="route_bluetooth_default.png" width="26.399999618530273" height="41.599998474121094"/>
         <image name="route_bluetooth_disabled.png" width="26.399999618530273" height="41.599998474121094"/>
         <image name="route_bluetooth_selected.png" width="26.399999618530273" height="41.599998474121094"/>
