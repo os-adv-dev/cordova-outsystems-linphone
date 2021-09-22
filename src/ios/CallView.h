@@ -94,12 +94,14 @@
 @property (weak, nonatomic) IBOutlet UIView *waitView;
 @property (weak, nonatomic) IBOutlet UIView *infoView;
 @property(nonatomic, strong) IBOutlet UIIconButton *customButton2;
+@property (weak, nonatomic) IBOutlet UIIconButton *customButton1;
 
 - (IBAction)onRoutesClick:(id)sender;
 - (IBAction)onRoutesBluetoothClick:(id)sender;
 - (IBAction)onRoutesEarpieceClick:(id)sender;
 - (IBAction)onRoutesSpeakerClick:(id)sender;
 - (IBAction)onNumpadClick:(id)sender;
+- (IBAction)onCustomButton1Click:(id)sender;
 - (IBAction)onCustomButton2Click:(id)sender;
 
 @end

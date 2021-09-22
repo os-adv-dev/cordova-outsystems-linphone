@@ -723,6 +723,188 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
 }
 
 
+
+- (IBAction)onCustomButton1Click:(id)sender {
+    NSError *error;
+    NSData *objectData = [[self dmftConfiguration] dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData:objectData options:NSJSONReadingMutableContainers error:&error];
+    
+    NSNumber *cooldownTime  = [json objectForKey:@"cooldownTime"];
+    [[self customButton1] setUserInteractionEnabled:NO];
+    [NSTimer scheduledTimerWithTimeInterval:cooldownTime.doubleValue target:self selector:@selector(enableCustomButton1) userInfo:nil repeats:NO];
+    
+    NSNumber *disconnectType  = [json objectForKey:@"disconnectType"];
+    
+    NSURL *url = [NSURL URLWithString:[json objectForKey:@"url"]];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    
+    NSArray *headers  = [json objectForKey:@"headers"];
+    for (int i = 0; i < [headers count]; i++) {
+        NSDictionary *header = headers[i];
+        NSString *value = [header valueForKey:@"value"];
+        NSString *key = [header valueForKey:@"key"];
+        [request setValue:value forHTTPHeaderField:key];
+    }
+    
+    [request setHTTPMethod:[json objectForKey:@"method"]];
+    if ([[json objectForKey:@"method"]  isEqual: @"POST"]) {
+        [request setHTTPBody:[[json objectForKey:@"body"] dataUsingEncoding:NSUTF8StringEncoding]];
+        [request setValue:[json objectForKey:@"contentType"] forHTTPHeaderField:@"Content-Type"];
+    }
+    NSURLSession *session = [NSURLSession sharedSession];
+    NSURLSessionTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSHTTPURLResponse *rresponse = (NSHTTPURLResponse*)response;
+        NSInteger disconnectType = [json objectForKey:@"disconnectType"];
+        if ([rresponse statusCode] == 200) {
+            NSNumber* successMessageType = [json objectForKey:@"successMessageType"];
+            if (successMessageType == 0) {
+                printf("%s", [[json objectForKey:@"successMessageSpec"] UTF8String]);
+            }else{
+                NSString *successMessageSpec = [json objectForKey:@"successMessageSpec"];
+                NSArray *successMessageFullPath = [successMessageSpec componentsSeparatedByString:@"/"];
+                NSMutableArray *parentArray;
+                NSMutableDictionary *parentObject;
+                int lastParent = 0;
+                for (NSString* successMessagePath in successMessageFullPath) {
+                    NSInteger begin = [successMessagePath rangeOfString:@"("].location;
+                    NSInteger end = [successMessagePath rangeOfString:@")"].location;
+                    NSRange typeRange = NSMakeRange(begin+1, end-begin+1);
+                    NSRange pathRange = NSMakeRange(0, begin-1);
+                    NSString *path = [successMessagePath substringWithRange:pathRange];
+                    NSString *type = [successMessagePath substringWithRange:typeRange];
+                    if([type  isEqual: @"Int"]){
+                        if(lastParent ==0){
+                            NSInteger result = [[parentObject objectForKey:path] intValue];
+                            printf("%ld", (long)result);
+                        }else{
+                            NSInteger result = [[parentArray objectAtIndex:[path intValue]] intValue];
+                            printf("%ld", (long)result);
+                        }
+                    }else if([type  isEqual: @"Bool"]){
+                        if(lastParent ==0){
+                            BOOL result = [[parentObject objectForKey:path] boolValue];
+                            printf("%d", result);
+                        }else{
+                            BOOL result = [[parentArray objectAtIndex:[path intValue]] boolValue];
+                            printf("%d", result);
+                        }
+                    }else if([type  isEqual: @"String"]){
+                        if(lastParent ==0){
+                            NSString* result = [[parentObject objectForKey:path] string];
+                            printf("%s", [result UTF8String]);
+                        }else{
+                            NSString* result = [[parentArray objectAtIndex:[path intValue]] string];
+                            printf("%s", [result UTF8String]);
+                        }
+                    }else if([type  isEqual: @"JsonObject"]){
+                        if(lastParent ==0){
+                            parentObject = [parentObject objectForKey:path];
+                            
+                        }else{
+                            parentObject = [parentArray objectAtIndex:[path intValue]];
+                        }
+                        lastParent = 0;
+                    }else if([type  isEqual: @"JsonArray"]){
+                        if(lastParent ==0){
+                            parentArray = [parentObject objectForKey:path];
+                        }else{
+                            parentArray = [parentArray objectAtIndex:[path intValue]];
+                        }
+                        lastParent = 1;
+                    }else if([type  isEqual: @"long"]){
+                        if(lastParent ==0){
+                            NSNumber *result = @([[parentObject objectForKey:path] longValue]);
+                            printf("%ld", (long)result);
+                        }else{
+                            NSNumber *result = @([[parentArray objectAtIndex:[path intValue]] longValue]);
+                            printf("%ld", (long)result);
+                        }
+                    }
+                }
+                if(disconnectType == 1 || disconnectType == 3){
+                    [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+                }
+            }
+        }else{
+            NSNumber* failMessageType = [json objectForKey:@"failMessageType"];
+            if (failMessageType == 0) {
+                printf("%s", [[json objectForKey:@"failMessageSpec"] UTF8String]);
+            }else{
+                NSString *failMessageSpec = [json objectForKey:@"failMessageSpec"];
+                NSArray *failMessageFullPath = [failMessageSpec componentsSeparatedByString:@"/"];
+                NSMutableArray *parentArray;
+                NSMutableDictionary *parentObject;
+                int lastParent = 0;
+                for (NSString* failMessagePath in failMessageFullPath) {
+                    NSInteger begin = [failMessagePath rangeOfString:@"("].location;
+                    NSInteger end = [failMessagePath rangeOfString:@")"].location;
+                    NSRange typeRange = NSMakeRange(begin+1, end-begin+1);
+                    NSRange pathRange = NSMakeRange(0, begin-1);
+                    NSString *path = [failMessagePath substringWithRange:pathRange];
+                    NSString *type = [failMessagePath substringWithRange:typeRange];
+                    if([type  isEqual: @"Int"]){
+                        if(lastParent ==0){
+                            NSInteger result = [[parentObject objectForKey:path] intValue];
+                            printf("%ld", (long)result);
+                        }else{
+                            NSInteger result = [[parentArray objectAtIndex:[path intValue]] intValue];
+                            printf("%ld", (long)result);
+                        }
+                    }else if([type  isEqual: @"Bool"]){
+                        if(lastParent ==0){
+                            BOOL result = [[parentObject objectForKey:path] boolValue];
+                            printf("%d", result);
+                        }else{
+                            BOOL result = [[parentArray objectAtIndex:[path intValue]] boolValue];
+                            printf("%d", result);
+                        }
+                    }else if([type  isEqual: @"String"]){
+                        if(lastParent ==0){
+                            NSString* result = [[parentObject objectForKey:path] string];
+                            printf("%s", [result UTF8String]);
+                        }else{
+                            NSString* result = [[parentArray objectAtIndex:[path intValue]] string];
+                            printf("%s", [result UTF8String]);
+                        }
+                    }else if([type  isEqual: @"JsonObject"]){
+                        if(lastParent ==0){
+                            parentObject = [parentObject objectForKey:path];
+                            
+                        }else{
+                            parentObject = [parentArray objectAtIndex:[path intValue]];
+                        }
+                        lastParent = 0;
+                    }else if([type  isEqual: @"JsonArray"]){
+                        if(lastParent ==0){
+                            parentArray = [parentObject objectForKey:path];
+                        }else{
+                            parentArray = [parentArray objectAtIndex:[path intValue]];
+                        }
+                        lastParent = 1;
+                    }else if([type  isEqual: @"long"]){
+                        if(lastParent ==0){
+                            NSNumber *result = @([[parentObject objectForKey:path] longValue]);
+                            printf("%ld", (long)result);
+                        }else{
+                            NSNumber *result = @([[parentArray objectAtIndex:[path intValue]] longValue]);
+                            printf("%ld", (long)result);
+                        }
+                    }
+                }
+                if(disconnectType == 2 || disconnectType == 3){
+                    [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+                }
+            }
+        }
+            
+    }];
+    [task resume];
+}
+
+-(void)enableCustomButton1{
+    [[self customButton1] setUserInteractionEnabled:YES];
+    
+}
 -(void)enableCustomButton2{
     
     [[self customButton2] setUserInteractionEnabled:YES];

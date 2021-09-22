@@ -17,6 +17,7 @@
                 <outlet property="conferenceCallsTable" destination="sif-q0-7oE" id="Fjr-dB-s4q"/>
                 <outlet property="conferencePauseButton" destination="HAk-mv-6sG" id="SJg-ew-UIZ"/>
                 <outlet property="conferenceView" destination="0Ju-u5-N7A" id="H5K-Nv-IKI"/>
+                <outlet property="customButton1" destination="bh6-YW-KJI" id="SMq-qu-aoc"/>
                 <outlet property="customButton2" destination="8Zx-MI-pUL" id="yW6-NN-YNW"/>
                 <outlet property="durationLabel" destination="Oy8-QO-Jwb" id="mUT-TX-gLp"/>
                 <outlet property="eightButton" destination="DRh-kc-UVM" id="BPp-sh-qBg"/>
@@ -538,7 +539,6 @@
                                             <state key="highlighted" backgroundImage="color_E.png"/>
                                             <connections>
                                                 <action selector="onCustomButton2Click:" destination="-1" eventType="touchUpInside" id="fOH-0O-FT3"/>
-                                                <action selector="onOptionsClick:" destination="-1" eventType="touchUpInside" id="KZw-2M-V7E"/>
                                             </connections>
                                         </button>
                                     </subviews>
@@ -547,6 +547,23 @@
                                     <rect key="frame" x="0.0" y="63" width="375" height="63"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" heightSizable="YES"/>
                                     <subviews>
+                                        <button opaque="NO" tag="55" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bh6-YW-KJI" userLabel="CustomButton1" customClass="UIIconButton">
+                                            <rect key="frame" x="289" y="0.0" width="86" height="63"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                                            <accessibility key="accessibilityConfiguration" label="Options">
+                                                <bool key="isElement" value="YES"/>
+                                            </accessibility>
+                                            <inset key="titleEdgeInsets" minX="0.0" minY="38" maxX="0.0" maxY="0.0"/>
+                                            <state key="normal" image="footer_chat_default.png">
+                                                <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                            </state>
+                                            <state key="disabled" image="options_disabled.png"/>
+                                            <state key="selected" image="options_selected.png"/>
+                                            <state key="highlighted" backgroundImage="color_E.png"/>
+                                            <connections>
+                                                <action selector="onCustomButton1Click:" destination="-1" eventType="touchUpInside" id="B3t-fL-c5q"/>
+                                            </connections>
+                                        </button>
                                         <button opaque="NO" tag="57" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SRu-dB-r3e" userLabel="numpadButton" customClass="UIToggleButton">
                                             <rect key="frame" x="0.0" y="0.0" width="94" height="63"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES"/>
@@ -592,7 +609,7 @@
                 </view>
             </subviews>
             <color key="backgroundColor" red="1" green="1" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-            <point key="canvasLocation" x="-622" y="-31"/>
+            <point key="canvasLocation" x="-623.20000000000005" y="-31.03448275862069"/>
         </view>
     </objects>
     <resources>
@@ -611,6 +628,7 @@
         <image name="color_F.png" width="2" height="2"/>
         <image name="color_I.png" width="2" height="2"/>
         <image name="dialer_alt_back.png" width="42.400001525878906" height="42.400001525878906"/>
+        <image name="footer_chat_default.png" width="44" height="44"/>
         <image name="footer_dialer_default.png" width="44" height="44"/>
         <image name="footer_dialer_disabled.png" width="44" height="44"/>
         <image name="micro_default.png" width="47.200000762939453" height="60"/>
