@@ -33,6 +33,7 @@ var login: Bool = false
     var callIncomingView: CallIncomingView!
     var callView: CallView!
     var callOutgoingView: CallOutgoingView!
+    var restConfig: String = ""
     var dmftConfig: String = ""
         
     override func pluginInitialize() {
@@ -190,6 +191,9 @@ var login: Bool = false
             print(error)
         }
     }
+    @objc(setCustomButton1:)func setCustomButton1(command : CDVInvokedUrlCommand){
+        restConfig = command.argument(at: 0) as! String;
+    }
     @objc(setCustomButton2:)func setCustomButton2(command : CDVInvokedUrlCommand){
         dmftConfig = command.argument(at: 0) as! String;
     }
@@ -252,7 +256,8 @@ var login: Bool = false
         #endif
         
         var domain = command.argument(at: 0) as! String
-        let isVideo = command.argument(at: 1) as! Bool
+        let isVideoNumber = command.argument(at: 1) as! NSNumber
+        let isVideo = isVideoNumber.boolValue
         let isLowBandwidth = command.argument(at: 2) as! Bool
         
         if proxyServer != "" {
@@ -355,6 +360,7 @@ var login: Bool = false
                 }
                 callView = CallView()
                 callView.dmftConfiguration = dmftConfig
+                callView.restConfiguration = restConfig
                 viewController.present(callView, animated: true, completion: nil)
             }
         case .End:

@@ -598,8 +598,14 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     if (linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept &&
         !([UIApplication sharedApplication].applicationState != UIApplicationStateActive))
         return;
-
-    NSString *username =[NSString stringWithUTF8String:linphone_address_get_display_name(linphone_call_get_remote_address(call))];
+    char * usernamechar = linphone_address_get_display_name(linphone_call_get_remote_address(call));
+    NSString *username;
+    if(usernamechar == nil){
+        username = @"unknown";
+    }else{
+        NSString *username =[NSString stringWithUTF8String:usernamechar];
+    }
+    
     NSString *title = [NSString stringWithFormat:NSLocalizedString(@"%@ would like to enable video", nil), username];
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateActive &&
         floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_9_x_Max) {
