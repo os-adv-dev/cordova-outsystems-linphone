@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2010-2020 Belledonne Communications SARL.
  *
- * This file is part of linphone-iphone 
+ * This file is part of linphone-iphone
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,10 +38,10 @@
 
 @interface CallView : UIViewController <UIGestureRecognizerDelegate> {
   @private
-	UITapGestureRecognizer *singleFingerTap;
-	NSTimer *hideControlsTimer;
-	NSTimer *videoDismissTimer;
-	BOOL videoHidden;
+    UITapGestureRecognizer *singleFingerTap;
+    NSTimer *hideControlsTimer;
+    NSTimer *videoDismissTimer;
+    BOOL videoHidden;
     BOOL callRecording;
 }
 
@@ -54,28 +54,22 @@
 @property(nonatomic, strong) IBOutlet UIActivityIndicatorView *videoWaitingForFirstImage;
 @property(weak, nonatomic) IBOutlet UIView *callView;
 
+@property(nonatomic, strong) NSString *restConfiguration;
+@property(nonatomic, strong) NSString *dmftConfiguration;
+
 @property(nonatomic, strong) IBOutlet UIPauseButton *callPauseButton;
-@property(nonatomic, strong) IBOutlet UIButton *optionsConferenceButton;
 @property(nonatomic, strong) IBOutlet UIVideoButton *videoButton;
 @property(nonatomic, strong) IBOutlet UIMutedMicroButton *microButton;
 @property(nonatomic, strong) IBOutlet UISpeakerButton *speakerButton;
 @property(nonatomic, strong) IBOutlet UIToggleButton *routesButton;
-@property(nonatomic, strong) IBOutlet UIToggleButton *optionsButton;
 @property(nonatomic, strong) IBOutlet UIHangUpButton *hangupButton;
 @property(nonatomic, strong) IBOutlet UIView *numpadView;
 @property(nonatomic, strong) IBOutlet UIView *routesView;
-@property(nonatomic, strong) IBOutlet UIView *optionsView;
 @property(nonatomic, strong) IBOutlet UIButton *routesEarpieceButton;
 @property(nonatomic, strong) IBOutlet UIButton *routesSpeakerButton;
 @property(nonatomic, strong) IBOutlet UIButton *routesBluetoothButton;
-@property(nonatomic, strong) IBOutlet UIButton *optionsAddButton;
-@property(nonatomic, strong) IBOutlet UIButton *optionsTransferButton;
 @property(nonatomic, strong) IBOutlet UIToggleButton *numpadButton;
 @property(weak, nonatomic) IBOutlet UIPauseButton *conferencePauseButton;
-@property(weak, nonatomic) IBOutlet UIBouncingView *chatNotificationView;
-@property(weak, nonatomic) IBOutlet UILabel *chatNotificationLabel;
-@property (weak, nonatomic) IBOutlet UIButton *recordButton;
-@property (weak, nonatomic) IBOutlet UIButton *recordButtonOnView;
 
 @property(weak, nonatomic) IBOutlet UIView *bottomBar;
 @property(nonatomic, strong) IBOutlet UIDigitButton *oneButton;
@@ -99,18 +93,15 @@
 @property(strong, nonatomic) IBOutlet CallPausedTableView *conferenceCallsTable;
 @property (weak, nonatomic) IBOutlet UIView *waitView;
 @property (weak, nonatomic) IBOutlet UIView *infoView;
+@property(nonatomic, strong) IBOutlet UIIconButton *customButton2;
+@property (weak, nonatomic) IBOutlet UIIconButton *customButton1;
 
 - (IBAction)onRoutesClick:(id)sender;
 - (IBAction)onRoutesBluetoothClick:(id)sender;
 - (IBAction)onRoutesEarpieceClick:(id)sender;
 - (IBAction)onRoutesSpeakerClick:(id)sender;
-- (IBAction)onOptionsClick:(id)sender;
-- (IBAction)onOptionsTransferClick:(id)sender;
-- (IBAction)onOptionsAddClick:(id)sender;
-- (IBAction)onOptionsConferenceClick:(id)sender;
 - (IBAction)onNumpadClick:(id)sender;
-- (IBAction)onChatClick:(id)sender;
-- (IBAction)onRecordClick:(id)sender;
-- (IBAction)onRecordOnViewClick:(id)sender;
+- (IBAction)onCustomButton1Click:(id)sender;
+- (IBAction)onCustomButton2Click:(id)sender;
 
 @end

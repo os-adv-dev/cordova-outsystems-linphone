@@ -387,7 +387,7 @@ public class CallActivity extends Activity {
             t.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    view.setEnabled(true);
+                    findViewById(R.id.custombutton1).setEnabled(true);
                 }
             },cooldownTime);
 
@@ -565,16 +565,34 @@ public class CallActivity extends Activity {
                                             String type = successMessagePath.substring(begin+1,end-1);
                                             switch (type){
                                                 case "Int":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
-                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    int resultInt;
+                                                    if (lastParent == 0){
+                                                        resultInt = parentObject.getInt(path);
+                                                    }else{
+                                                        resultInt = parentArray.getInt(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultInt));
+                                                    Toast.makeText(getApplicationContext(),resultInt,Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "Bool":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
-                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    Boolean resultBool;
+                                                    if (lastParent == 0){
+                                                        resultBool = parentObject.getBoolean(path);
+                                                    }else{
+                                                        resultBool = parentArray.getBoolean(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultBool));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(resultBool),Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "String":
-                                                    Log.i(Linphone.TAG,input.getString(path));
-                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    String resultString;
+                                                    if (lastParent == 0){
+                                                        resultString = parentObject.getString(path);
+                                                    }else{
+                                                        resultString = parentArray.getString(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG,resultString);
+                                                    Toast.makeText(getApplicationContext(),resultString,Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "JsonObject":
                                                     if (lastParent == 0){
@@ -592,8 +610,14 @@ public class CallActivity extends Activity {
                                                     lastParent = 1;
                                                     break;
                                                 case "Long":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
-                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    long resultLong;
+                                                    if (lastParent == 0){
+                                                        resultLong = parentObject.getLong(path);
+                                                    }else{
+                                                        resultLong = parentArray.getLong(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultLong));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(resultLong),Toast.LENGTH_LONG).show();
                                                     break;
                                             }
                                         }
@@ -621,16 +645,34 @@ public class CallActivity extends Activity {
                                             String type = failMessagePath.substring(begin+1,end-1);
                                             switch (type){
                                                 case "Int":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getInt(path)));
-                                                    Toast.makeText(getApplicationContext(),input.getInt(path),Toast.LENGTH_LONG).show();
+                                                    int resultInt;
+                                                    if (lastParent == 0){
+                                                        resultInt = parentObject.getInt(path);
+                                                    }else{
+                                                        resultInt = parentArray.getInt(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultInt));
+                                                    Toast.makeText(getApplicationContext(),resultInt,Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "Bool":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getBoolean(path)));
-                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getBoolean(path)),Toast.LENGTH_LONG).show();
+                                                    Boolean resultBool;
+                                                    if (lastParent == 0){
+                                                        resultBool = parentObject.getBoolean(path);
+                                                    }else{
+                                                        resultBool = parentArray.getBoolean(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultBool));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(resultBool),Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "String":
-                                                    Log.i(Linphone.TAG,input.getString(path));
-                                                    Toast.makeText(getApplicationContext(),input.getString(path),Toast.LENGTH_LONG).show();
+                                                    String resultString;
+                                                    if (lastParent == 0){
+                                                        resultString = parentObject.getString(path);
+                                                    }else{
+                                                        resultString = parentArray.getString(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG,resultString);
+                                                    Toast.makeText(getApplicationContext(),resultString,Toast.LENGTH_LONG).show();
                                                     break;
                                                 case "JsonObject":
                                                     if (lastParent == 0){
@@ -648,8 +690,14 @@ public class CallActivity extends Activity {
                                                     lastParent = 1;
                                                     break;
                                                 case "Long":
-                                                    Log.i(Linphone.TAG, String.valueOf(input.getLong(path)));
-                                                    Toast.makeText(getApplicationContext(),String.valueOf(input.getLong(path)),Toast.LENGTH_LONG).show();
+                                                    long resultLong;
+                                                    if (lastParent == 0){
+                                                        resultLong = parentObject.getLong(path);
+                                                    }else{
+                                                        resultLong = parentArray.getLong(Integer.parseInt(path));
+                                                    }
+                                                    Log.i(Linphone.TAG, String.valueOf(resultLong));
+                                                    Toast.makeText(getApplicationContext(),String.valueOf(resultLong),Toast.LENGTH_LONG).show();
                                                     break;
                                             }
                                         }
@@ -676,30 +724,37 @@ public class CallActivity extends Activity {
         }
     }
     public void customButton2(View view) {
-        //todo finish
         try {
             JSONObject input = new JSONObject(Linphone.DTMFToneInput);
-
-        if (Linphone.core.getCurrentCall() != null) {
-            try {
-                String sequence = input.getString("sequence");
-                for (char key : sequence.toCharArray()) {
-                    if (key == ',') {
-                        Thread.sleep(1000);
-                        continue;
-                    }
-                    Linphone.core.playDtmf(key, 1);
-                    Linphone.core.getCurrentCall().sendDtmf(key);
+            int cooldownTime = input.getInt("cooldownTime");
+            view.setEnabled(false);
+            Timer t = new Timer("reenableCustomButton2", false);
+            t.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    findViewById(R.id.custombutton2).setEnabled(true);
                 }
-            } catch(InterruptedException e){
-                e.printStackTrace();
-                Log.e(Linphone.TAG,input.getString("failMessage"));
-                Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+            },cooldownTime);
+            if (Linphone.core.getCurrentCall() != null) {
+                try {
+                    String sequence = input.getString("sequence");
+                    for (char key : sequence.toCharArray()) {
+                        if (key == ',') {
+                            Thread.sleep(1000);
+                            continue;
+                        }
+                        Linphone.core.playDtmf(key, 1);
+                        Linphone.core.getCurrentCall().sendDtmf(key);
+                    }
+                } catch(InterruptedException e){
+                    e.printStackTrace();
+                    Log.e(Linphone.TAG,input.getString("failMessage"));
+                    Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                }
+            }else{
+                Log.i(Linphone.TAG,input.getString("successMessage"));
+                Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
             }
-        }else{
-            Log.i(Linphone.TAG,input.getString("successMessage"));
-            Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
-        }
         }catch(JSONException e){
             e.printStackTrace();
             Log.e(Linphone.TAG,e.getLocalizedMessage());
