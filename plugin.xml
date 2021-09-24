@@ -41,11 +41,11 @@
             <service android:name="org.linphone.core.tools.service.CoreService" android:foregroundServiceType="phoneCall|camera|microphone" android:stopWithTask="false" />
 
         </config-file>
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/activity[@android:name='MainActivity']">
+            <application android:alwaysRetainTaskState="true" />
+        </edit-config>
 
-        <!--edit-config file="AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
-            <activity android:alwaysRetainTaskState="true" />
-        </edit-config-->
-
+        <dependency id="cordova-custom-config" version="^5.1.0" />
 
         <source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" />
         <source-file src="src/android/Linphone.java" target-dir="src/com/outsystems/linphone" />
