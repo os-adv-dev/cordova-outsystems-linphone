@@ -42,9 +42,9 @@
 
         </config-file>
 
-        <edit-config file="AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
+        <!--edit-config file="AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
             <activity android:alwaysRetainTaskState="true" />
-        </edit-config>
+        </edit-config-->
 
 
         <source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" />
