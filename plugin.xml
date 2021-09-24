@@ -42,13 +42,18 @@
 
         </config-file>
 
+        <edit-config file="AndroidManifest.xml" target="/manifest/application/activity[@android:name='MainActivity']" mode="merge">
+            <activity android:alwaysRetainTaskState="true" />
+        </edit-config>
+
 
         <source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" />
         <source-file src="src/android/Linphone.java" target-dir="src/com/outsystems/linphone" />
         <source-file src="src/android/CallActivity.java" target-dir="src/com/outsystems/linphone" />
         
+        
         <!--Required for firebase push notifications-->
-        <!--framework src="com.google.firebase:firebase-messaging:19.0.1"/-->
+        <framework src="com.google.firebase:firebase-messaging:19.0.1"/>
 
         <!--Adding this dependency allows the linphone-sdk to automatically handle audio focus-->
         <framework src="com.google.android.flexbox:flexbox:3.0.0"/>

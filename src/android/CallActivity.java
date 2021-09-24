@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +35,8 @@ import java.util.TimerTask;
 
 public class CallActivity extends Activity {
 
+    private boolean isVideo = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +47,16 @@ public class CallActivity extends Activity {
         Linphone.core.setNativeVideoWindowId(findViewById(R.id.remote_video_surface));
         // The local preview is a org.linphone.mediastream.video.capture.CaptureTextureView
         // which inherits from TextureView and contains code to keep the ratio of the capture video
+        String[] videoDevices = Linphone.core.getVideoDevicesList();
+        if (videoDevices.length>1){
+            for (String videoDevice : videoDevices){
+                if (videoDevice.equals("StaticImage: Static picture")){
+                    continue;
+                }
+                Linphone.core.setCaptureDevice(videoDevice);
+                break;
+            }
+        }
         Linphone.core.setNativePreviewWindowId(findViewById(R.id.local_preview_video_surface));
 
         Intent currIntent = getIntent();
@@ -55,26 +68,14 @@ public class CallActivity extends Activity {
                     finish();
                     return;
                 }
-                Boolean outVideo = currIntent.getBooleanExtra("Video",false);
+                isVideo = currIntent.getBooleanExtra("Video",false);
                 Boolean lowBandwidth = currIntent.getBooleanExtra("LowBandwidth",false);
-                if (outVideo){
-                    String[] videoDevices = Linphone.core.getVideoDevicesList();
-                    if (videoDevices.length>1){
-                        Linphone.core.setVideoDevice(videoDevices[1]);
-                    }
-                }
-                Linphone.outgoingCall(domain,outVideo,lowBandwidth);
+                Linphone.outgoingCall(domain,isVideo,lowBandwidth);
                 OugoingCall();
                 break;
             case "Ringing":
-                Boolean inVideo = currIntent.getBooleanExtra("Video",false);
-                if (inVideo){
-                    String[] videoDevices = Linphone.core.getVideoDevicesList();
-                    if (videoDevices.length>1){
-                        Linphone.core.setVideoDevice(videoDevices[1]);
-                    }
-                }
-                IncomingCall(inVideo);
+                isVideo = currIntent.getBooleanExtra("Video",false);
+                IncomingCall();
                 break;
             case "Answer":
                 String remoteSipAddress = currIntent.getStringExtra("remoteSipAddress");
@@ -98,6 +99,7 @@ public class CallActivity extends Activity {
                     case Released :
                         Log.d(Linphone.TAG,"Released");
                         Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
+                        mainAct.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivity(mainAct);
                         // Call state will be released shortly after the End state
                         break;
@@ -121,8 +123,25 @@ public class CallActivity extends Activity {
                         }
                         boolean localVideo = call.getCurrentParams().videoEnabled();
                         if(remoteVideo != localVideo){
-                            findViewById(R.id.toggle_video_button).setSelected(!findViewById(R.id.toggle_video_button).isSelected());
+                            if (getApplicationContext().checkSelfPermission(Manifest.permission.CAMERA)
+                                    == PackageManager.PERMISSION_DENIED){
+                                requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
+                            }
+                            ImageView toggleVideo = findViewById(R.id.toggle_video_button);
+                            toggleVideo.setSelected(remoteVideo);
                             Linphone.toggleVideo(remoteVideo);
+
+                            if (remoteVideo) {
+                                findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+                                findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+                                findViewById(R.id.layout_initials).setVisibility(View.GONE);
+                                findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+                            } else {
+                                findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+                                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+                                findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
+                                findViewById(R.id.layout_early).setVisibility(View.GONE);
+                            }
                             Toast.makeText(getApplicationContext(),"remote updated!",Toast.LENGTH_LONG).show();
                         }
                         // When the remote requests a call update
@@ -179,16 +198,6 @@ public class CallActivity extends Activity {
     public void Call(){
 
         if(Linphone.core.getCurrentCall() != null) {
-            findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
-            findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
-
-            findViewById(R.id.layout_early).setVisibility(View.GONE);
-            findViewById(R.id.ringing_buttons).setVisibility(View.GONE);
-            findViewById(R.id.calling_buttons).setVisibility(View.VISIBLE);
-            //findViewById(R.id.call_buttons).setVisibility(View.VISIBLE);
-            findViewById(R.id.layout_initials).setVisibility(View.GONE);
-            findViewById(R.id.numbpad_button).setVisibility(View.VISIBLE);
-            findViewById(R.id.call_buttons).setVisibility(View.VISIBLE);
 
             if (Linphone.DTMFToneInput != null && !Linphone.DTMFToneInput.equals("")){
                 findViewById(R.id.custombutton2).setVisibility(View.VISIBLE);
@@ -199,6 +208,41 @@ public class CallActivity extends Activity {
                 findViewById(R.id.custombutton1).setVisibility(View.VISIBLE);
             }else{
                 findViewById(R.id.custombutton1).setVisibility(View.GONE);
+            }
+
+
+            String name = "";
+            if(Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName() == null){
+                name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            }else{
+                name = "Jonh Doe";
+            }
+
+            ((TextView) findViewById(R.id.contact_name_early)).setText(name);
+            ((TextView) findViewById(R.id.contact_number_early)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
+            ((TextView) findViewById(R.id.contact_name)).setText(name);
+            ((TextView) findViewById(R.id.contact_number)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
+            ((TextView) findViewById(R.id.initials)).setText(getInitials(name));
+
+            findViewById(R.id.ringing_buttons).setVisibility(View.GONE);
+            findViewById(R.id.calling_buttons).setVisibility(View.VISIBLE);
+            findViewById(R.id.numbpad_button).setVisibility(View.VISIBLE);
+            findViewById(R.id.call_buttons).setVisibility(View.VISIBLE);
+
+            if (isVideo) {
+                findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+                findViewById(R.id.toggle_video_button).setSelected(true);
+                findViewById(R.id.layout_initials).setVisibility(View.GONE);
+                findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+
+
+            } else {
+                findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+                findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_early).setVisibility(View.GONE);
+
             }
 
         }else{
@@ -212,7 +256,12 @@ public class CallActivity extends Activity {
             findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
             findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
 
-            String name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            String name = "";
+            if(Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName() == null){
+                name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            }else{
+                name = "Jonh Doe";
+            }
             ((TextView) findViewById(R.id.contact_name)).setText(name);
             ((TextView) findViewById(R.id.contact_number)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
 
@@ -232,34 +281,34 @@ public class CallActivity extends Activity {
         }
     }
 
-    public void IncomingCall(Boolean isVideo){
+    public void IncomingCall(){
 
         if(Linphone.core.getCurrentCall() != null) {
+            String name = "";
+            if(Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName() == null){
+                name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            }else{
+                name = "Jonh Doe";
+            }
+
+            findViewById(R.id.call_buttons).setVisibility(View.GONE);
+            findViewById(R.id.numbpad_button).setVisibility(View.GONE);
+            findViewById(R.id.calling_buttons).setVisibility(View.GONE);
+            findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+            findViewById(R.id.ringing_buttons).setVisibility(View.VISIBLE);
+
             if (isVideo) {
                 findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
-                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
-                String name = "";
-                if(Linphone.core.getCurrentCall().getRemoteContact() == null){
-                    name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
-                }else{
-                    name = Linphone.core.getCurrentCall().getRemoteContact();
-                }
-                ((TextView) findViewById(R.id.contact_name_early)).setText(name);
-                ((TextView) findViewById(R.id.contact_number_early)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
 
+
+                ((TextView) findViewById(R.id.contact_name_early)).setText(name);
+                ((TextView) findViewById(R.id.contact_name_early)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
 
                 findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
-                findViewById(R.id.ringing_buttons).setVisibility(View.VISIBLE);
-                findViewById(R.id.calling_buttons).setVisibility(View.GONE);
-                //findViewById(R.id.call_buttons).setVisibility(View.GONE);
                 findViewById(R.id.layout_initials).setVisibility(View.GONE);
-                findViewById(R.id.numbpad_button).setVisibility(View.GONE);
-                findViewById(R.id.call_buttons).setVisibility(View.GONE);
             } else {
                 findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
-                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
 
-                String name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
                 ((TextView) findViewById(R.id.contact_name)).setText(name);
                 ((TextView) findViewById(R.id.contact_number)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
 
@@ -267,12 +316,7 @@ public class CallActivity extends Activity {
 
 
                 findViewById(R.id.layout_early).setVisibility(View.GONE);
-                findViewById(R.id.ringing_buttons).setVisibility(View.VISIBLE);
-                findViewById(R.id.calling_buttons).setVisibility(View.GONE);
-                //findViewById(R.id.call_buttons).setVisibility(View.GONE);
                 findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
-                findViewById(R.id.numbpad_button).setVisibility(View.GONE);
-                findViewById(R.id.call_buttons).setVisibility(View.GONE);
             }
 
         }else{
@@ -307,6 +351,7 @@ public class CallActivity extends Activity {
         }
 
         Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
+        mainAct.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(mainAct);
     }
 
@@ -340,7 +385,11 @@ public class CallActivity extends Activity {
             org.linphone.core.tools.Log.e("[Notification Broadcast Receiver] Couldn't find call from remote address "+remoteSipAddress);
             return;
         }
-        call.accept();
+        if (isVideo){
+            call.acceptEarlyMedia();
+        }else{
+            call.accept();
+        }
         Call();
 
     }
@@ -359,6 +408,19 @@ public class CallActivity extends Activity {
             requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
         }
         Linphone.toggleVideo();
+
+
+        if (view.isSelected()) {
+            findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+            findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+            findViewById(R.id.layout_initials).setVisibility(View.GONE);
+            findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+            findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+            findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
+            findViewById(R.id.layout_early).setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -535,14 +597,7 @@ public class CallActivity extends Activity {
                         JSONObject header = headers.getJSONObject(i);
                         postBuilder.addHeaders(header.getString("key"),header.getString("value"));
                     }
-                    switch (input.getInt("bodyType")){
-                        case 0:
-                            postBuilder.addJSONObjectBody(input.getJSONObject("body"));
-                            break;
-                        case 1:
-                            postBuilder.addJSONArrayBody(input.getJSONArray("body"));
-                            break;
-                    }
+                    postBuilder.addJSONObjectBody(input.getJSONObject("body"));
                     postBuilder.build().getAsOkHttpResponse(new OkHttpResponseListener() {
                         @Override
                         public void onResponse(Response response) {

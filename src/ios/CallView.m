@@ -123,6 +123,7 @@ const NSInteger SECURE_BUTTON_TAG = 5;
     [self hideSpeaker:[[CallManager instance] isBluetoothAvailable]];
     [self callDurationUpdate];
     [self onCurrentCallChange];
+    [[CallManager instance] getFrontCamId];
     // Set windows (warn memory leaks)
     linphone_core_set_native_video_window_id([[CallManager instance] getCore], (__bridge void *)(_videoView));
     linphone_core_set_native_preview_window_id([[CallManager instance] getCore], (__bridge void *)(_videoPreview));
@@ -158,7 +159,8 @@ const NSInteger SECURE_BUTTON_TAG = 5;
     [[UIDevice currentDevice] setProximityMonitoringEnabled:TRUE];
     
     hiddenVolume = TRUE;
-
+    
+    [[CallManager instance] getFrontCamId];
     // we must wait didAppear to reset fullscreen mode because we cannot change it in viewwillappear
     LinphoneCall *call = linphone_core_get_current_call([[CallManager instance] getCore]);
     LinphoneCallState state = (call != NULL) ? linphone_call_get_state(call) : 0;
@@ -249,13 +251,13 @@ const NSInteger SECURE_BUTTON_TAG = 5;
 }
 
 - (void)updateCallView {
-    CGRect pauseFrame = _callPauseButton.frame;
+    /*CGRect pauseFrame = _callPauseButton.frame;
     if (videoHidden) {
         pauseFrame.origin.y = _bottomBar.frame.origin.y - pauseFrame.size.height - 60;
     } else {
         pauseFrame.origin.y = _videoCameraSwitch.frame.origin.y+_videoGroup.frame.origin.y;
     }
-    _callPauseButton.frame = pauseFrame;
+    _callPauseButton.frame = pauseFrame;*/
     [self updateInfoView:FALSE];
 }
 
@@ -414,7 +416,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     _noActiveCallView.hidden = (call || linphone_core_is_in_conference([[CallManager instance] getCore]));
     _callView.hidden = !call;
     _conferenceView.hidden = !linphone_core_is_in_conference([[CallManager instance] getCore]);
-    _callPauseButton.hidden = !call && !linphone_core_is_in_conference([[CallManager instance] getCore]);
+    _callPauseButton.hidden = NO;// !call && !linphone_core_is_in_conference([[CallManager instance] getCore]);
 
     [_callPauseButton setType:UIPauseButtonType_CurrentCall call:call];
     [_conferencePauseButton setType:UIPauseButtonType_Conference call:call];
@@ -595,8 +597,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     if (linphone_call_params_get_local_conference_mode(linphone_call_get_current_params(call))) {
         return;
     }
-    if (linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept &&
-        !([UIApplication sharedApplication].applicationState != UIApplicationStateActive))
+    if (linphone_core_get_video_policy([[CallManager instance] getCore])->automatically_accept)
         return;
     char * usernamechar = linphone_address_get_display_name(linphone_call_get_remote_address(call));
     NSString *username;
@@ -635,20 +636,21 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
             //LOGI(@"User declined video proposal");
               if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
                   [CallManager.instance acceptVideoWithCall:call confirm:FALSE];
-                  [videoDismissTimer invalidate];
-                  videoDismissTimer = nil;
+                  [self->videoDismissTimer invalidate];
+                  self->videoDismissTimer = nil;
               }
             }
             onConfirmationClick:^() {
             //LOGI(@"User accept video proposal");
               if (call == linphone_core_get_current_call([[CallManager instance] getCore])) {
                   [CallManager.instance acceptVideoWithCall:call confirm:TRUE];
-                  [videoDismissTimer invalidate];
-                  videoDismissTimer = nil;
+                  [self->videoDismissTimer invalidate];
+                  self->videoDismissTimer = nil;
+                  
               }
             }
             inController:self];
-        videoDismissTimer = [NSTimer scheduledTimerWithTimeInterval:30
+        videoDismissTimer = [NSTimer scheduledTimerWithTimeInterval:10
                                                              target:self
                                                            selector:@selector(dismissVideoActionSheet:)
                                                            userInfo:sheet

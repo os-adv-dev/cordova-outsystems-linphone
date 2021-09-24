@@ -66,8 +66,12 @@ import AVFoundation
         let camList = lc?.videoDevicesList
         if (camList != nil) {
             for cam in camList! {
+                if cam == "StaticImage: Static picture"{
+                    continue
+                }
                 if cam == "AV Capture: com.apple.avfoundation.avcapturedevice.built-in_video:0" {
                     backCamId = cam
+                    try! lc?.setVideodevice(newValue: backCamId);
                 }
             }
         }
@@ -79,6 +83,9 @@ import AVFoundation
         let camList = lc?.videoDevicesList
         if (camList != nil) {
             for cam in camList! {
+                if cam == "StaticImage: Static picture"{
+                    continue
+                }
                 if cam == "AV Capture: com.apple.avfoundation.avcapturedevice.built-in_video:1" {
                     frontCamId = cam
                     try! lc?.setVideodevice(newValue: frontCamId);
@@ -201,7 +208,7 @@ import AVFoundation
 	}
 	
 	@objc func isSpeakerEnabled() -> Bool {
-		if let outputDevice = lc!.outputAudioDevice {
+        if let outputDevice = lc!.outputAudioDevice {
 			return outputDevice.type == AudioDeviceType.Speaker
 		}
 		return false
@@ -333,13 +340,11 @@ import AVFoundation
         if (displayName != nil) {
             try addr.setDisplayname(newValue: displayName)
         }
-        
         lcallParams.videoEnabled = isVideo;
-/*
-        if(ConfigManager.instance().lpConfigBoolForKey(key: "override_domain_with_default_one")) {
-            try addr.setDomain(newValue: ConfigManager.instance().lpConfigStringForKey(key: "domain", section: "assistant"))
-        }
-*/
+        let videopolicy = lc?.videoActivationPolicy
+        videopolicy?.automaticallyAccept = isVideo
+        lc?.videoActivationPolicy = videopolicy
+        
         if (CallManager.instance().nextCallIsTransfer) {
             let call = CallManager.instance().lc!.currentCall
             try call?.transferTo(referTo: addr)
@@ -348,6 +353,7 @@ import AVFoundation
             if (isSas) {
                 lcallParams.mediaEncryption = .ZRTP
             }
+            
             let call = CallManager.instance().lc!.inviteAddressWithParams(addr: addr, params: lcallParams)
             if (call != nil) {
                 // The LinphoneCallAppData object should be set on call creation with callback
