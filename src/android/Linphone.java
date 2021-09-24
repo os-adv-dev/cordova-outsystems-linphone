@@ -20,6 +20,7 @@
 package com.outsystems.linphone;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.*;
@@ -49,22 +50,16 @@ public class Linphone extends CordovaPlugin {
     private static String proxyServer;
     private JSONArray arguments;
 
-    /**
-     * Sets the context of the Command. This can then be used to do things like
-     * get file paths associated with the Activity.
-     *
-     * @param cordova The context of the main Activity.
-     * @param webView The CordovaWebView Cordova is running in.
-     */
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-        super.initialize(cordova, webView);
+    static public void ensureCoreExists(Context context){
+        if (core != null){
+            return;
+        }
         // For push notifications to work, you have to copy your google-services.json in the app/ folder
         // And you must declare our FirebaseMessaging service in the Manifest
         // You also have to make some changes in your build.gradle files, see the ones in this project
 
         Factory factory = Factory.instance();
-        factory.setDebugMode(true, "Hello Linphone");
-        core = factory.createCore(null, null, cordova.getActivity());
+        core = factory.createCore(null, null, context);
 
         // Make sure the core is configured to use push notification token from firebase
         core.setPushNotificationEnabled(true);
@@ -91,7 +86,19 @@ public class Linphone extends CordovaPlugin {
         // you'll have to use a code similar to the one in toggleVideo to answer a received request
 
         // If the following property is enabled, it will automatically configure created call params with video enabled
-        //core.videoActivationPolicy.automaticallyInitiate = true
+        core.getVideoActivationPolicy().setAutomaticallyInitiate(true);
+    }
+
+    /**
+     * Sets the context of the Command. This can then be used to do things like
+     * get file paths associated with the Activity.
+     *
+     * @param cordova The context of the main Activity.
+     * @param webView The CordovaWebView Cordova is running in.
+     */
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        ensureCoreExists(cordova.getActivity());
 
     }
 
@@ -505,6 +512,10 @@ public class Linphone extends CordovaPlugin {
                             e.printStackTrace();
                             result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
                         }
+                        Intent answerEarlyMedia = new Intent(cordova.getActivity(),CallActivity.class);
+                        answerEarlyMedia.putExtra("Video",true);
+                        answerEarlyMedia.putExtra("Type","Ringing");
+                        cordova.getActivity().startActivity(answerEarlyMedia);
                         break;
                     case OutgoingEarlyMedia:
                         Log.d(TAG,"OutgoingEarlyMedia");
@@ -706,6 +717,8 @@ public class Linphone extends CordovaPlugin {
         // If we wanted to start the call with video directly
         params.enableVideo(video);
 
+        core.getVideoActivationPolicy().setAutomaticallyAccept(video);
+
         // Finally we start the call
         Linphone.core.inviteAddressWithParams(remoteAddress, params);
         // Call process can be followed in onCallStateChanged callback from core listener
@@ -756,8 +769,8 @@ public class Linphone extends CordovaPlugin {
             core.enableVideoCapture(true);
             core.enableVideoDisplay(true);
         }
-        // Finally we request the call update
-        curCall.update(params);
+        // Finally we accept the call update
+        curCall.acceptUpdate(params);
 
         // Note that when toggling off the video, TextureViews will keep showing the latest frame displayed
     }
