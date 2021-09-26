@@ -534,7 +534,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 1 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
 
 
@@ -590,7 +597,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 2 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
                                 }
                             } catch (JSONException e) {
@@ -695,7 +709,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 1 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
 
 
@@ -775,7 +796,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 2 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
                                 }
                             } catch (JSONException e) {
