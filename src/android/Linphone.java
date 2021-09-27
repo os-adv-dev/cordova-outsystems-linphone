@@ -127,14 +127,14 @@ public class Linphone extends CordovaPlugin {
                 delete();
                 return true;
             case "call":
-                if (args.getBoolean(1) && !cordova.hasPermission(Manifest.permission.CAMERA)){
+                if (args.getInt(1)==1 && !cordova.hasPermission(Manifest.permission.CAMERA)){
                     arguments = args;
                     cordova.requestPermission(this,1,Manifest.permission.CAMERA);
                 }else{
                     Intent call = new Intent(cordova.getActivity(),CallActivity.class);
                     call.putExtra("Type","Call");
                     call.putExtra("Domain",args.getString(0));
-                    call.putExtra("Video",args.getBoolean(1));
+                    call.putExtra("Video",(args.getInt(1)==1));
                     call.putExtra("LowBandwidth",args.getBoolean(2));
                     cordova.getActivity().startActivity(call);
                 }

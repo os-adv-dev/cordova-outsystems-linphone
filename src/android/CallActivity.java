@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -36,6 +38,8 @@ import java.util.TimerTask;
 public class CallActivity extends Activity {
 
     private boolean isVideo = false;
+    public static Handler mHandlerRest;
+    public Handler mHandlerDMFT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +113,8 @@ public class CallActivity extends Activity {
                         break;
                     case PausedByRemote:
                         Log.d(Linphone.TAG,"PausedByRemote");
+                        call.pause();
+                        findViewById(R.id.pauseButton).setSelected(true);
                         // When the remote end of the call pauses it, it will be PausedByRemote
                         break;
                     case Updating:
@@ -152,7 +158,6 @@ public class CallActivity extends Activity {
                         Log.e(Linphone.TAG, call.getReason().toString());
                         break;
                     case Pausing:
-                        findViewById(R.id.pauseButton).setSelected(true);
                         Log.d(Linphone.TAG,"Pausing");
                         break;
                     case Resuming:
@@ -435,23 +440,35 @@ public class CallActivity extends Activity {
         Linphone.toggleCamera();
     }
     public void togglePause(View view){
+        if (view.isSelected()){
+            Call call = Linphone.core.getCalls()[0];
+            call.resume();
+        }else{
+            Call call = Linphone.core.getCurrentCall();
+            call.pause();
+        }
         view.setSelected(!view.isSelected());
-        Linphone.toggleCamera();
     }
     public void customButton1(View view){
         try {
             final JSONObject input = new JSONObject(Linphone.RESTInput);
             int disconnectType = input.getInt("disconnectType");
 
-            int cooldownTime = input.getInt("cooldownTime");
+            int cooldownTime = input.optInt("cooldownTime",0);
             view.setEnabled(false);
+            mHandlerRest = new Handler() {
+                public void handleMessage(Message msg) {
+                    findViewById(R.id.custombutton1).setEnabled(true);
+                }
+            };
             Timer t = new Timer("reenableCustomButton1", false);
             t.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    findViewById(R.id.custombutton1).setEnabled(true);
+                    mHandlerRest.obtainMessage(1).sendToTarget();
                 }
             },cooldownTime);
+
 
             switch (input.getString("method")){
                 case "GET":
@@ -517,7 +534,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 1 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
 
 
@@ -573,7 +597,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 2 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
                                 }
                             } catch (JSONException e) {
@@ -678,7 +709,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 1 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
 
 
@@ -758,7 +796,14 @@ public class CallActivity extends Activity {
                                         }
                                     }
                                     if(disconnectType == 2 || disconnectType == 3){
-                                        hangup(0);
+                                        int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+                                        Timer t2 = new Timer("DisconnectCustomButton1", false);
+                                        t2.schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                hangup(0);
+                                            }
+                                        },DisconnectOnActionResultDelay);
                                     }
                                 }
                             } catch (JSONException e) {
@@ -781,15 +826,22 @@ public class CallActivity extends Activity {
     public void customButton2(View view) {
         try {
             JSONObject input = new JSONObject(Linphone.DTMFToneInput);
-            int cooldownTime = input.getInt("cooldownTime");
+            int cooldownTime = input.optInt("cooldownTime",0);
             view.setEnabled(false);
             Timer t = new Timer("reenableCustomButton2", false);
+            mHandlerDMFT = new Handler() {
+                public void handleMessage(Message msg) {
+                    findViewById(R.id.custombutton2).setEnabled(true);
+                }
+            };
             t.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    findViewById(R.id.custombutton2).setEnabled(true);
+                    mHandlerDMFT.obtainMessage(1).sendToTarget();
                 }
             },cooldownTime);
+
+
             if (Linphone.core.getCurrentCall() != null) {
                 try {
                     String sequence = input.getString("sequence");
