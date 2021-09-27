@@ -730,11 +730,15 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     }
 }
 
+-(void) disconnectCall{
+    [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+}
+
 
 
 - (IBAction)onCustomButton1Click:(id)sender {
     NSError *error;
-    NSData *objectData = [[self dmftConfiguration] dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *objectData = [[self restConfiguration] dataUsingEncoding:NSUTF8StringEncoding];
     NSDictionary *json = [NSJSONSerialization JSONObjectWithData:objectData options:NSJSONReadingMutableContainers error:&error];
     
     NSNumber *cooldownTime  = [json objectForKey:@"cooldownTime"];
@@ -774,12 +778,12 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                 NSMutableDictionary *parentObject;
                 int lastParent = 0;
                 for (NSString* successMessagePath in successMessageFullPath) {
-                    NSInteger begin = [successMessagePath rangeOfString:@"("].location;
-                    NSInteger end = [successMessagePath rangeOfString:@")"].location;
-                    NSRange typeRange = NSMakeRange(begin+1, end-begin+1);
-                    NSRange pathRange = NSMakeRange(0, begin-1);
-                    NSString *path = [successMessagePath substringWithRange:pathRange];
-                    NSString *type = [successMessagePath substringWithRange:typeRange];
+                    NSArray *elements = [successMessagePath componentsSeparatedByString:@"("];
+                    if (elements.count <= 0) {
+                        return;
+                    }
+                    NSString *path = elements[0];
+                    NSString *type = [elements[1] componentsSeparatedByString:@")"][0];
                     if([type  isEqual: @"Int"]){
                         if(lastParent ==0){
                             NSInteger result = [[parentObject objectForKey:path] intValue];
@@ -819,7 +823,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                             parentArray = [parentArray objectAtIndex:[path intValue]];
                         }
                         lastParent = 1;
-                    }else if([type  isEqual: @"long"]){
+                    }else if([type  isEqual: @"Long"]){
                         if(lastParent ==0){
                             NSNumber *result = @([[parentObject objectForKey:path] longValue]);
                             printf("%ld", (long)result);
@@ -830,7 +834,8 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                     }
                 }
                 if(disconnectType == 1 || disconnectType == 3){
-                    [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+                    NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
+                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
                 }
             }
         }else{
@@ -844,12 +849,12 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                 NSMutableDictionary *parentObject;
                 int lastParent = 0;
                 for (NSString* failMessagePath in failMessageFullPath) {
-                    NSInteger begin = [failMessagePath rangeOfString:@"("].location;
-                    NSInteger end = [failMessagePath rangeOfString:@")"].location;
-                    NSRange typeRange = NSMakeRange(begin+1, end-begin+1);
-                    NSRange pathRange = NSMakeRange(0, begin-1);
-                    NSString *path = [failMessagePath substringWithRange:pathRange];
-                    NSString *type = [failMessagePath substringWithRange:typeRange];
+                    NSArray *elements = [failMessagePath componentsSeparatedByString:@"("];
+                    if (elements.count <= 0) {
+                        return;
+                    }
+                    NSString *path = elements[0];
+                    NSString *type = [elements[1] componentsSeparatedByString:@")"][0];
                     if([type  isEqual: @"Int"]){
                         if(lastParent ==0){
                             NSInteger result = [[parentObject objectForKey:path] intValue];
@@ -889,7 +894,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                             parentArray = [parentArray objectAtIndex:[path intValue]];
                         }
                         lastParent = 1;
-                    }else if([type  isEqual: @"long"]){
+                    }else if([type  isEqual: @"Long"]){
                         if(lastParent ==0){
                             NSNumber *result = @([[parentObject objectForKey:path] longValue]);
                             printf("%ld", (long)result);
@@ -900,7 +905,8 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                     }
                 }
                 if(disconnectType == 2 || disconnectType == 3){
-                    [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+                    NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
+                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
                 }
             }
         }
