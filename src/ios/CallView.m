@@ -734,7 +734,20 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
 }
 
+-(void) showNotif:(NSString*)message{
 
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
+                                                                   message:message
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+
+    [self presentViewController:alert animated:YES completion:nil];
+
+    int duration = 5; // duration in seconds
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, duration * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    });
+}
 
 - (IBAction)onCustomButton1Click:(id)sender {
     NSError *error;
@@ -766,7 +779,6 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     NSURLSession *session = [NSURLSession sharedSession];
     NSURLSessionTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         NSHTTPURLResponse *rresponse = (NSHTTPURLResponse*)response;
-        NSInteger disconnectType = [json objectForKey:@"disconnectType"];
         if ([rresponse statusCode] == 200) {
             NSNumber* successMessageType = [json objectForKey:@"successMessageType"];
             if (successMessageType == 0) {
@@ -775,7 +787,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                 NSString *successMessageSpec = [json objectForKey:@"successMessageSpec"];
                 NSArray *successMessageFullPath = [successMessageSpec componentsSeparatedByString:@"/"];
                 NSMutableArray *parentArray;
-                NSMutableDictionary *parentObject;
+                NSMutableDictionary *parentObject = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
                 int lastParent = 0;
                 for (NSString* successMessagePath in successMessageFullPath) {
                     NSArray *elements = [successMessagePath componentsSeparatedByString:@"("];
@@ -788,25 +800,43 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         if(lastParent ==0){
                             NSInteger result = [[parentObject objectForKey:path] intValue];
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }else{
                             NSInteger result = [[parentArray objectAtIndex:[path intValue]] intValue];
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }
                     }else if([type  isEqual: @"Bool"]){
                         if(lastParent ==0){
-                            BOOL result = [[parentObject objectForKey:path] boolValue];
+                            BOOL result = [parentObject objectForKey:path];
                             printf("%d", result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%d", result]];
+                            });
                         }else{
-                            BOOL result = [[parentArray objectAtIndex:[path intValue]] boolValue];
+                            BOOL result = [parentArray objectAtIndex:[path intValue]];
                             printf("%d", result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%d", result]];
+                            });
                         }
                     }else if([type  isEqual: @"String"]){
                         if(lastParent ==0){
-                            NSString* result = [[parentObject objectForKey:path] string];
+                            NSString* result = [parentObject objectForKey:path];
                             printf("%s", [result UTF8String]);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:result];
+                            });
                         }else{
-                            NSString* result = [[parentArray objectAtIndex:[path intValue]] string];
+                            NSString* result = [parentArray objectAtIndex:[path intValue]];
                             printf("%s", [result UTF8String]);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:result];
+                            });
                         }
                     }else if([type  isEqual: @"JsonObject"]){
                         if(lastParent ==0){
@@ -827,15 +857,23 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         if(lastParent ==0){
                             NSNumber *result = @([[parentObject objectForKey:path] longValue]);
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }else{
                             NSNumber *result = @([[parentArray objectAtIndex:[path intValue]] longValue]);
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }
                     }
                 }
-                if(disconnectType == 1 || disconnectType == 3){
-                    NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
-                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                if([disconnectType intValue] == 1 || [disconnectType intValue] == 3){
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
+                        [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                    });
                 }
             }
         }else{
@@ -846,7 +884,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                 NSString *failMessageSpec = [json objectForKey:@"failMessageSpec"];
                 NSArray *failMessageFullPath = [failMessageSpec componentsSeparatedByString:@"/"];
                 NSMutableArray *parentArray;
-                NSMutableDictionary *parentObject;
+                NSMutableDictionary *parentObject = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];;
                 int lastParent = 0;
                 for (NSString* failMessagePath in failMessageFullPath) {
                     NSArray *elements = [failMessagePath componentsSeparatedByString:@"("];
@@ -859,25 +897,43 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         if(lastParent ==0){
                             NSInteger result = [[parentObject objectForKey:path] intValue];
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }else{
                             NSInteger result = [[parentArray objectAtIndex:[path intValue]] intValue];
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }
                     }else if([type  isEqual: @"Bool"]){
                         if(lastParent ==0){
-                            BOOL result = [[parentObject objectForKey:path] boolValue];
+                            BOOL result = [parentObject objectForKey:path];
                             printf("%d", result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%d", result]];
+                            });
                         }else{
-                            BOOL result = [[parentArray objectAtIndex:[path intValue]] boolValue];
+                            BOOL result = [parentArray objectAtIndex:[path intValue]];
                             printf("%d", result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%d", result]];
+                            });
                         }
                     }else if([type  isEqual: @"String"]){
                         if(lastParent ==0){
-                            NSString* result = [[parentObject objectForKey:path] string];
+                            NSString* result = [parentObject objectForKey:path];
                             printf("%s", [result UTF8String]);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:result];
+                            });
                         }else{
-                            NSString* result = [[parentArray objectAtIndex:[path intValue]] string];
+                            NSString* result = [parentArray objectAtIndex:[path intValue]];
                             printf("%s", [result UTF8String]);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:result];
+                            });
                         }
                     }else if([type  isEqual: @"JsonObject"]){
                         if(lastParent ==0){
@@ -898,15 +954,23 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         if(lastParent ==0){
                             NSNumber *result = @([[parentObject objectForKey:path] longValue]);
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }else{
                             NSNumber *result = @([[parentArray objectAtIndex:[path intValue]] longValue]);
                             printf("%ld", (long)result);
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showNotif:[NSString stringWithFormat:@"%ld", (long)result]];
+                            });
                         }
                     }
                 }
-                if(disconnectType == 2 || disconnectType == 3){
-                    NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
-                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                if([disconnectType intValue] == 2 || [disconnectType intValue] == 3){
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
+                        [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                    });
                 }
             }
         }
@@ -943,8 +1007,10 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
         linphone_core_play_dtmf([[CallManager instance] getCore], key, 100);
         if (result == 0) {
             printf("%s", [json objectForKey:@"successMessage"]);
+            [self showNotif:[json objectForKey:@"successMessage"]];
         }else{
             printf("%s", [json objectForKey:@"failMessage"]);
+            [self showNotif:[json objectForKey:@"failMessage"]];
         }
 
     }
