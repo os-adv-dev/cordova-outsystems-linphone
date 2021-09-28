@@ -71,6 +71,8 @@ public class CallActivity extends Activity {
             case "Call":
                 String domain = (currIntent.getStringExtra("Domain") != null) ? currIntent.getStringExtra("Domain") : "";
                 if(domain.equals("")){
+                    Linphone.core.removeListener(callListener);
+                    callListener = null;
                     finish();
                     return;
                 }
@@ -88,125 +90,129 @@ public class CallActivity extends Activity {
                 answerCall(remoteSipAddress);
 
             default:
+                Linphone.core.removeListener(callListener);
+                callListener = null;
                 finish();
                 break;
         }
-        callListener = new CoreListenerStub(){
-            @Override
-            public void onCallStateChanged(@NonNull Core core, @NonNull Call call, Call.State state, @NonNull String message) {
-                super.onCallStateChanged(core, call, state, message);
-                switch (state) {
-                    case Connected :
-                        Log.d(Linphone.TAG,"Connected");
-                        Call();
-                        break;
+        if(callListener == null) {
+            callListener = new CoreListenerStub() {
+                @Override
+                public void onCallStateChanged(@NonNull Core core, @NonNull Call call, Call.State state, @NonNull String message) {
+                    super.onCallStateChanged(core, call, state, message);
+                    switch (state) {
+                        case Connected:
+                            Log.d(Linphone.TAG, "Connected");
+                            Call();
+                            break;
 
-                    case Released :
-                        Log.d(Linphone.TAG,"Released");
-                        Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
-                        mainAct.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivity(mainAct);
-                        // Call state will be released shortly after the End state
-                        break;
-                    case Paused:
-                        Log.d(Linphone.TAG,"Paused");
-                        // When you put a call in pause, it will became Paused
-                        break;
-                    case PausedByRemote:
-                        Log.d(Linphone.TAG,"PausedByRemote");
-                        call.pause();
-                        findViewById(R.id.pauseButton).setSelected(true);
-                        // When the remote end of the call pauses it, it will be PausedByRemote
-                        break;
-                    case Updating:
-                        Log.d(Linphone.TAG,"Updating");
-                        // When we request a call update, for example when toggling video
-                        break;
-                    case UpdatedByRemote:
-                        Log.d(Linphone.TAG,"UpdatedByRemote");
-                        boolean remoteVideo = false;
-                        if(call.getRemoteParams() != null){
-                            remoteVideo = call.getRemoteParams().videoEnabled();
-                        }
-                        boolean localVideo = call.getCurrentParams().videoEnabled();
-                        if(remoteVideo != localVideo){
-                            if (getApplicationContext().checkSelfPermission(Manifest.permission.CAMERA)
-                                    == PackageManager.PERMISSION_DENIED){
-                                requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
+                        case Released:
+                            Log.d(Linphone.TAG, "Released");
+                            Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
+                            mainAct.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                            startActivity(mainAct);
+                            // Call state will be released shortly after the End state
+                            break;
+                        case Paused:
+                            Log.d(Linphone.TAG, "Paused");
+                            // When you put a call in pause, it will became Paused
+                            break;
+                        case PausedByRemote:
+                            Log.d(Linphone.TAG, "PausedByRemote");
+                            call.pause();
+                            findViewById(R.id.pauseButton).setSelected(true);
+                            // When the remote end of the call pauses it, it will be PausedByRemote
+                            break;
+                        case Updating:
+                            Log.d(Linphone.TAG, "Updating");
+                            // When we request a call update, for example when toggling video
+                            break;
+                        case UpdatedByRemote:
+                            Log.d(Linphone.TAG, "UpdatedByRemote");
+                            boolean remoteVideo = false;
+                            if (call.getRemoteParams() != null) {
+                                remoteVideo = call.getRemoteParams().videoEnabled();
                             }
+                            boolean localVideo = call.getCurrentParams().videoEnabled();
                             ImageView toggleVideo = findViewById(R.id.toggle_video_button);
-                            toggleVideo.setSelected(remoteVideo);
-                            Linphone.toggleVideo(remoteVideo);
+                            if (remoteVideo != localVideo || remoteVideo != toggleVideo.isSelected()) {
+                                if (getApplicationContext().checkSelfPermission(Manifest.permission.CAMERA)
+                                        == PackageManager.PERMISSION_DENIED) {
+                                    requestPermissions(new String[]{Manifest.permission.CAMERA}, 1);
+                                }
+                                toggleVideo.setSelected(remoteVideo);
+                                Linphone.toggleVideo(remoteVideo);
 
-                            Boolean speakerOn = findViewById(R.id.toggleSpeaker).isSelected();
-                            if (!speakerOn){
-                                findViewById(R.id.toggleSpeaker).setSelected(true);
-                                Linphone.toggleSpeaker();
-                            }
+                                Boolean speakerOn = findViewById(R.id.toggleSpeaker).isSelected();
+                                if (!speakerOn) {
+                                    findViewById(R.id.toggleSpeaker).setSelected(true);
+                                    Linphone.toggleSpeaker();
+                                }
 
-                            if (remoteVideo) {
-                                findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
-                                findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
-                                findViewById(R.id.layout_initials).setVisibility(View.GONE);
-                                findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
-                            } else {
-                                findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
-                                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
-                                findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
-                                findViewById(R.id.layout_early).setVisibility(View.GONE);
+                                if (remoteVideo) {
+                                    findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+                                    findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+                                    findViewById(R.id.layout_initials).setVisibility(View.GONE);
+                                    findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+                                } else {
+                                    findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+                                    findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+                                    findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
+                                    findViewById(R.id.layout_early).setVisibility(View.GONE);
+                                }
+                                Toast.makeText(getApplicationContext(), "remote updated!", Toast.LENGTH_LONG).show();
                             }
-                            Toast.makeText(getApplicationContext(),"remote updated!",Toast.LENGTH_LONG).show();
-                        }
-                        // When the remote requests a call update
-                        break;
-                    case Error:
-                        Log.d(Linphone.TAG,"CallState Error");
-                        Log.e(Linphone.TAG,message);
-                        Log.e(Linphone.TAG, call.getReason().toString());
-                        break;
-                    case Pausing:
-                        Log.d(Linphone.TAG,"Pausing");
-                        break;
-                    case Resuming:
-                        findViewById(R.id.pauseButton).setSelected(false);
-                        Log.d(Linphone.TAG,"Resuming");
-                        break;
-                    case Idle:
-                        Log.d(Linphone.TAG,"Idle");
-                        break;
-                    case OutgoingInit:
-                        Log.d(Linphone.TAG,"OutgoingInit");
-                        break;
-                    case OutgoingRinging:
-                        Log.d(Linphone.TAG,"OutgoingRinging");
-                        break;
-                    case OutgoingProgress:
-                        Log.d(Linphone.TAG,"OutgoingProgress");
-                        break;
-                    case OutgoingEarlyMedia:
-                        Log.d(Linphone.TAG,"OutgoingEarlyMedia");
-                        findViewById(R.id.numbpad_button).setVisibility(View.VISIBLE);
-                        break;
-                    case IncomingEarlyMedia:
-                        Log.d(Linphone.TAG,"IncomingEarlyMedia");
-                        break;
-                    case PushIncomingReceived:
-                        Log.d(Linphone.TAG,"PushIncomingReceived");
-                        break;
-                    case EarlyUpdatedByRemote:
-                        Log.d(Linphone.TAG,"EarlyUpdatedByRemote");
-                        break;
-                    case EarlyUpdating:
-                        Log.d(Linphone.TAG,"EarlyUpdating");
-                        break;
-                    case StreamsRunning:
-                        Log.d(Linphone.TAG,"StreamsRunning");
-                        break;
+                            // When the remote requests a call update
+                            break;
+                        case Error:
+                            Log.d(Linphone.TAG, "CallState Error");
+                            Log.e(Linphone.TAG, message);
+                            Log.e(Linphone.TAG, call.getReason().toString());
+                            break;
+                        case Pausing:
+                            Log.d(Linphone.TAG, "Pausing");
+                            break;
+                        case Resuming:
+                            findViewById(R.id.pauseButton).setSelected(false);
+                            Log.d(Linphone.TAG, "Resuming");
+                            break;
+                        case Idle:
+                            Log.d(Linphone.TAG, "Idle");
+                            break;
+                        case OutgoingInit:
+                            Log.d(Linphone.TAG, "OutgoingInit");
+                            break;
+                        case OutgoingRinging:
+                            Log.d(Linphone.TAG, "OutgoingRinging");
+                            break;
+                        case OutgoingProgress:
+                            Log.d(Linphone.TAG, "OutgoingProgress");
+                            break;
+                        case OutgoingEarlyMedia:
+                            Log.d(Linphone.TAG, "OutgoingEarlyMedia");
+                            findViewById(R.id.numbpad_button).setVisibility(View.VISIBLE);
+                            break;
+                        case IncomingEarlyMedia:
+                            Log.d(Linphone.TAG, "IncomingEarlyMedia");
+                            break;
+                        case PushIncomingReceived:
+                            Log.d(Linphone.TAG, "PushIncomingReceived");
+                            break;
+                        case EarlyUpdatedByRemote:
+                            Log.d(Linphone.TAG, "EarlyUpdatedByRemote");
+                            break;
+                        case EarlyUpdating:
+                            Log.d(Linphone.TAG, "EarlyUpdating");
+                            break;
+                        case StreamsRunning:
+                            Log.d(Linphone.TAG, "StreamsRunning");
+                            break;
+                    }
                 }
-            }
-        };
+            };
 
-        Linphone.core.addListener(callListener);
+            Linphone.core.addListener(callListener);
+        }
 
     }
     public void Call(){
@@ -257,20 +263,20 @@ public class CallActivity extends Activity {
                     Linphone.toggleSpeaker();
                 }
 
-                if (localVideo) {
-                    findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
-                    findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
-                    findViewById(R.id.layout_initials).setVisibility(View.GONE);
-                    findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
-                } else {
-                    findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
-                    findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
-                    findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
-                    findViewById(R.id.layout_early).setVisibility(View.GONE);
-                }
+                findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_initials).setVisibility(View.GONE);
+                findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+            }else{
+                findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+                findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
+                findViewById(R.id.layout_early).setVisibility(View.GONE);
             }
 
         }else{
+            Linphone.core.removeListener(callListener);
+            callListener = null;
             this.finish();
         }
     }
@@ -302,6 +308,8 @@ public class CallActivity extends Activity {
             findViewById(R.id.call_buttons).setVisibility(View.GONE);
 
         }else{
+            Linphone.core.removeListener(callListener);
+            callListener = null;
             this.finish();
         }
     }
@@ -345,6 +353,8 @@ public class CallActivity extends Activity {
             }
 
         }else{
+            Linphone.core.removeListener(callListener);
+            callListener = null;
             this.finish();
         }
     }
@@ -1009,6 +1019,7 @@ public class CallActivity extends Activity {
     @Override
     protected void onDestroy() {
         Linphone.core.removeListener(callListener);
+        callListener = null;
         super.onDestroy();
     }
 
