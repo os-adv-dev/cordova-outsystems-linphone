@@ -732,6 +732,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
 
 -(void) disconnectCall{
     [[CallManager instance] terminateCallWithCall:linphone_core_get_current_call([[CallManager instance] getCore])];
+    [self dismissViewControllerAnimated:true completion:nil];
 }
 
 -(void) showNotif:(NSString*)message{
@@ -779,10 +780,14 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     NSURLSession *session = [NSURLSession sharedSession];
     NSURLSessionTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         NSHTTPURLResponse *rresponse = (NSHTTPURLResponse*)response;
+        NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
         if ([rresponse statusCode] == 200) {
             NSNumber* successMessageType = [json objectForKey:@"successMessageType"];
-            if (successMessageType == 0) {
+            if (successMessageType.intValue == 0) {
                 printf("%s", [[json objectForKey:@"successMessageSpec"] UTF8String]);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self showNotif:[json objectForKey:@"successMessageSpec"]];
+                });
             }else{
                 NSString *successMessageSpec = [json objectForKey:@"successMessageSpec"];
                 NSArray *successMessageFullPath = [successMessageSpec componentsSeparatedByString:@"/"];
@@ -869,17 +874,20 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         }
                     }
                 }
-                if([disconnectType intValue] == 1 || [disconnectType intValue] == 3){
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
-                        [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
-                    });
-                }
+            }
+            if(([disconnectType intValue] == 1 || [disconnectType intValue] == 3) && disconnectOnActionResultDelay.intValue != 0){
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                });
             }
         }else{
             NSNumber* failMessageType = [json objectForKey:@"failMessageType"];
-            if (failMessageType == 0) {
+            if (failMessageType.intValue == 0) {
                 printf("%s", [[json objectForKey:@"failMessageSpec"] UTF8String]);
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self showNotif:[json objectForKey:@"failMessageSpec"]];
+                });
             }else{
                 NSString *failMessageSpec = [json objectForKey:@"failMessageSpec"];
                 NSArray *failMessageFullPath = [failMessageSpec componentsSeparatedByString:@"/"];
@@ -966,12 +974,11 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
                         }
                     }
                 }
-                if([disconnectType intValue] == 2 || [disconnectType intValue] == 3){
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
-                        [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
-                    });
-                }
+            }
+            if(([disconnectType intValue] == 2 || [disconnectType intValue] == 3) && disconnectOnActionResultDelay.intValue != 0){
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+                });
             }
         }
             
@@ -997,22 +1004,38 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
     NSNumber *cooldownTime  = [json objectForKey:@"cooldownTime"];
     [[self customButton2] setUserInteractionEnabled:NO];
     [NSTimer scheduledTimerWithTimeInterval:cooldownTime.doubleValue target:self selector:@selector(enableCustomButton2) userInfo:nil repeats:NO];
+    int result = 0;
+    NSNumber *disconnectType  = [json objectForKey:@"disconnectType"];
     for (int i = 0; i < [sequence length]; i++) {
         char key = [sequence characterAtIndex:i];
         if (key == ',') {
             [NSThread sleepForTimeInterval:1.0f];
             continue;
         }
-        int result = linphone_call_send_dtmf(linphone_core_get_current_call([[CallManager instance] getCore]), key);
+        result = result + linphone_call_send_dtmf(linphone_core_get_current_call([[CallManager instance] getCore]), key);
         linphone_core_play_dtmf([[CallManager instance] getCore], key, 100);
-        if (result == 0) {
-            printf("%s", [json objectForKey:@"successMessage"]);
-            [self showNotif:[json objectForKey:@"successMessage"]];
-        }else{
-            printf("%s", [json objectForKey:@"failMessage"]);
-            [self showNotif:[json objectForKey:@"failMessage"]];
-        }
+        
 
+    }
+    NSNumber *disconnectOnActionResultDelay  = [json objectForKey:@"DisconnectOnActionResultDelay"];
+    if (result == 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self showNotif:[json objectForKey:@"successMessage"]];
+        });
+        if(([disconnectType intValue] == 1 || [disconnectType intValue] == 3) && disconnectOnActionResultDelay.intValue != 0){
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+            });
+        }
+    }else{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self showNotif:[json objectForKey:@"failMessage"]];
+        });
+        if(([disconnectType intValue] == 2 || [disconnectType intValue] == 3) && disconnectOnActionResultDelay.intValue != 0){
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSTimer scheduledTimerWithTimeInterval:disconnectOnActionResultDelay.doubleValue target:self selector:@selector(disconnectCall) userInfo:nil repeats:NO];
+            });
+        }
     }
     //Log.e(Linphone.TAG,input.getString("failMessage"));
     //Log.i(Linphone.TAG,input.getString("successMessage"));
