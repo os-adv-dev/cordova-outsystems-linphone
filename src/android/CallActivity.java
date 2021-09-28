@@ -922,28 +922,83 @@ public class CallActivity extends Activity {
                 }
             },cooldownTime*1000L);
 
-
+            int DisconnectOnActionResultDelay = input.optInt("DisconnectOnActionResultDelay",0);
+            int disconnectType = input.getInt("disconnectType");
             if (Linphone.core.getCurrentCall() != null) {
                 try {
                     String sequence = input.getString("sequence");
+                    int result = 0;
                     for (char key : sequence.toCharArray()) {
                         if (key == ',') {
                             Thread.sleep(1000);
                             continue;
                         }
                         Linphone.core.playDtmf(key, 1);
-                        Linphone.core.getCurrentCall().sendDtmf(key);
+                        result += Linphone.core.getCurrentCall().sendDtmf(key);
                     }
-                    Log.i(Linphone.TAG,input.getString("successMessage"));
-                    Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
+                    if (result >0){
+                        Log.i(Linphone.TAG,input.getString("failMessage"));
+                        Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                        if((disconnectType == 2 || disconnectType == 3) && DisconnectOnActionResultDelay != 0){
+                            Timer t2 = new Timer("DisconnectCustomButton2", false);
+                            t2.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    hangup(1);
+                                }
+                            },DisconnectOnActionResultDelay*1000L);
+                        }
+                    }else{
+                        Log.i(Linphone.TAG,input.getString("successMessage"));
+                        Toast.makeText(getApplicationContext(),input.getString("successMessage"),Toast.LENGTH_LONG).show();
+                        if((disconnectType == 1 || disconnectType == 3) && DisconnectOnActionResultDelay != 0){
+                            Timer t2 = new Timer("DisconnectCustomButton2", false);
+                            t2.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    hangup(1);
+                                }
+                            },DisconnectOnActionResultDelay*1000L);
+                        }
+                    }
+                    if(disconnectType == 1 || disconnectType == 3){
+
+                        if (DisconnectOnActionResultDelay != 0){
+                            Timer t2 = new Timer("DisconnectCustomButton2", false);
+                            t2.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    hangup(1);
+                                }
+                            },DisconnectOnActionResultDelay*1000L);
+                        }
+                    }
                 } catch(InterruptedException e){
                     e.printStackTrace();
                     Log.e(Linphone.TAG,input.getString("failMessage"));
                     Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                    if((disconnectType == 2 || disconnectType == 3) && DisconnectOnActionResultDelay != 0){
+                        Timer t2 = new Timer("DisconnectCustomButton2", false);
+                        t2.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                hangup(1);
+                            }
+                        },DisconnectOnActionResultDelay*1000L);
+                    }
                 }
             }else{
                 Log.i(Linphone.TAG,input.getString("failMessage"));
                 Toast.makeText(getApplicationContext(),input.getString("failMessage"),Toast.LENGTH_LONG).show();
+                if((disconnectType == 2 || disconnectType == 3) && DisconnectOnActionResultDelay != 0){
+                    Timer t2 = new Timer("DisconnectCustomButton2", false);
+                    t2.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            hangup(1);
+                        }
+                    },DisconnectOnActionResultDelay*1000L);
+                }
             }
         }catch(JSONException e){
             e.printStackTrace();
