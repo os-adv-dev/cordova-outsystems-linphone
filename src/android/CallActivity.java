@@ -108,6 +108,8 @@ public class CallActivity extends Activity {
 
                         case Released:
                             Log.d(Linphone.TAG, "Released");
+                            Linphone.core.removeListener(callListener);
+                            callListener = null;
                             Intent mainAct = new Intent(CallActivity.this, MainActivity.class);
                             mainAct.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                             startActivity(mainAct);
@@ -115,11 +117,11 @@ public class CallActivity extends Activity {
                             break;
                         case Paused:
                             Log.d(Linphone.TAG, "Paused");
+                            findViewById(R.id.pauseButton).setSelected(true);
                             // When you put a call in pause, it will became Paused
                             break;
                         case PausedByRemote:
                             Log.d(Linphone.TAG, "PausedByRemote");
-                            call.pause();
                             findViewById(R.id.pauseButton).setSelected(true);
                             // When the remote end of the call pauses it, it will be PausedByRemote
                             break;
@@ -171,6 +173,7 @@ public class CallActivity extends Activity {
                             break;
                         case Pausing:
                             Log.d(Linphone.TAG, "Pausing");
+                            findViewById(R.id.pauseButton).setSelected(true);
                             break;
                         case Resuming:
                             findViewById(R.id.pauseButton).setSelected(false);
@@ -206,6 +209,9 @@ public class CallActivity extends Activity {
                             break;
                         case StreamsRunning:
                             Log.d(Linphone.TAG, "StreamsRunning");
+                            if (findViewById(R.id.pauseButton).isSelected()){
+                                findViewById(R.id.pauseButton).setSelected(false);
+                            }
                             break;
                     }
                 }
