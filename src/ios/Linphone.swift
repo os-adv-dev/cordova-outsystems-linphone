@@ -288,6 +288,11 @@ var login: Bool = false
         }
     }
     
+    @objc(setAutoAcceptVideo:)func setAutoAcceptVideo(command:CDVInvokedUrlCommand){
+        
+        lc.videoActivationPolicy?.automaticallyAccept = (command.argument(at: 0) as! NSNumber ).boolValue
+    }
+    
     @objc(hangup:)func hangup(command : CDVInvokedUrlCommand) {
         if (self.call != nil && self.call!.state != Call.State.End){
             /* terminate the call */
