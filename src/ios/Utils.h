@@ -20,7 +20,7 @@
 //#import "LinphoneManager.h"
 #import <linphone/linphonecore.h>
 #import <Photos/Photos.h>
-#import "Linphone_Sample_app-Swift.h"
+#import "$appname-Swift.h"
 
 #define IPAD (LinphoneManager.runningOnIpad)
 //#define ANIMATED ([LinphoneManager.instance lpConfigBoolForKey:@"animations_preference"]

@@ -20,8 +20,6 @@ module.exports = function (context) {
     var callIncomingViewPath = path.join(pluginFilesPath,"CallIncomingView.m");
     var callOutgoingViewPath = path.join(pluginFilesPath,"CallOutgoingView.m");
     var callViewPath = path.join(pluginFilesPath,"CallView.m");
-    var linphoneManagerPath = path.join(pluginFilesPath,"LinphoneManager.m");
-    var uiHangUpButtonPath = path.join(pluginFilesPath,"UIHangUpButton.m");
     var uiaudio = path.join(pluginFilesPath,"UILinphoneAudioPlayer.m");
     var utils = path.join(pluginFilesPath,"Utils.h");
 
@@ -30,8 +28,6 @@ module.exports = function (context) {
     replaceinFile(callIncomingViewPath,new RegExp("\\$appname","g"),projectName);
     replaceinFile(callOutgoingViewPath,new RegExp("\\$appname","g"),projectName);
     replaceinFile(callViewPath,new RegExp("\\$appname","g"),projectName);
-    replaceinFile(linphoneManagerPath,new RegExp("\\$appname","g"),projectName);
-    replaceinFile(uiHangUpButtonPath,new RegExp("\\$appname","g"),projectName);
     replaceinFile(utils,new RegExp("\\$appname","g"),projectName);
     replaceinFile(uiaudio,new RegExp("\\$appname","g"),projectName);
     deferral.resolve();
@@ -41,11 +37,9 @@ module.exports = function (context) {
     function replaceinFile(path,replaceRegex,toReplace){
         if (fs.existsSync(path)) {
             var content = fs.readFileSync(path, "utf8");
-    
-            var regexAppId = new RegExp("\\$appname","g");
+
             content = content.replace(replaceRegex,toReplace);
     
-            
             fs.writeFileSync(path, content);
             console.log("Finished changing "+path+"!");
         }else{

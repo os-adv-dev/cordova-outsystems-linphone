@@ -19,7 +19,7 @@
 
 #import "CallOutgoingView.h"
 #import "Utils.h"
-#import "Linphone_Sample_app-Swift.h"
+#import "$appname-Swift.h"
 //#import "PhoneMainView.h"
 
 @implementation CallOutgoingView
