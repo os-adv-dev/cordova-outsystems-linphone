@@ -19,7 +19,7 @@
 
 #import "UILinphoneAudioPlayer.h"
 #import "Utils.h"
-#import "Linphone_Sample_app-Swift.h"
+#import "$appname-Swift.h"
 
 @implementation UILinphoneAudioPlayer {
     @private

@@ -32,7 +32,7 @@
 
 #include "linphone/linphonecore.h"
 
-#import "Linphone_Sample_app-Swift.h"
+#import "$appname-Swift.h"
 
 const NSInteger SECURE_BUTTON_TAG = 5;
 
