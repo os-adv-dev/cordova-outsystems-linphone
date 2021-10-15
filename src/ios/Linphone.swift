@@ -146,10 +146,13 @@ var login: Bool = false
         switch transportTypeString {
         case "TCP":
             transportType = TransportType.Tcp;
+            break;
         case "UDP":
             transportType = TransportType.Udp;
+            break;
         default:
             transportType = TransportType.Tls;
+            break;
         }
         
         
@@ -311,17 +314,20 @@ var login: Bool = false
         switch state {
         case .Ok:
             stateString = "OK"
+            break;
         case .Cleared:
             stateString = "Cleared"
+            break;
         case .Failed:
             stateString = "Failed"
-        case .None:
+            break;
+        default :
             stateString = "None"
-        case .Progress:
-            stateString = "Progress"
+            break;
         }
         let json = ["Type":"Registration","Status":stateString,"Message":message]
         let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        result?.setKeepCallbackAs(true);
         if mCallbackListener != "" {
             self.commandDelegate.send(result, callbackId: mCallbackListener)
         }
@@ -331,6 +337,7 @@ var login: Bool = false
     func onAudioDevicesListUpdated(core: Core) {
         let json = ["Type":"Registration","Status":"AudioUpdated"]
         let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        result?.setKeepCallbackAs(true);
         if mCallbackListener != "" {
             self.commandDelegate.send(result, callbackId: mCallbackListener)
         }
@@ -339,6 +346,7 @@ var login: Bool = false
     func onAudioDeviceChanged(core: Core, audioDevice: AudioDevice) {
         let json = ["Type":"Registration","Status":"AudioChanged"]
         let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        result?.setKeepCallbackAs(true);
         if mCallbackListener != "" {
             self.commandDelegate.send(result, callbackId: mCallbackListener)
         }
@@ -349,10 +357,13 @@ var login: Bool = false
         switch state {
         case .OutgoingRinging:
             stateString = "OutgoingRinging"
+            break;
         case .OutgoingEarlyMedia:
             stateString = "OutgoingEarlyMedia"
+            break;
         case .Connected:
             stateString = "Connected"
+            break;
         case .StreamsRunning:
             stateString = "StreamsRunning"
             if(callView == nil){
@@ -368,6 +379,7 @@ var login: Bool = false
                 callView.restConfiguration = restConfig
                 viewController.present(callView, animated: true, completion: nil)
             }
+            break;
         case .End:
             stateString = "End"
             if callIncomingView != nil {
@@ -380,6 +392,7 @@ var login: Bool = false
                 callOutgoingView.dismiss(animated: true, completion: nil)
                 callOutgoingView = nil
             }
+            break;
         case .Error:
             stateString = "Error"
             if callIncomingView != nil {
@@ -392,45 +405,63 @@ var login: Bool = false
                 callOutgoingView.dismiss(animated: true, completion: nil)
                 callOutgoingView = nil
             }
+            break;
         case .IncomingReceived:
             stateString = "IncomingReceived"
             callIncomingView = CallIncomingView()
             callIncomingView.delegate = self
             callIncomingView.call = core.currentCall?.getCobject
             viewController.present(callIncomingView, animated: true, completion: nil)
+            break;
         case .EarlyUpdatedByRemote:
             stateString = "EarlyUpdatedByRemote"
+            break;
         case .EarlyUpdating:
             stateString = "EarlyUpdating"
+            break;
         case .Idle:
             stateString = "Idle"
+            break;
         case .IncomingEarlyMedia:
             stateString = "IncomingEarlyMedia"
+            break;
         case .OutgoingInit:
             stateString = "OutgoingInit"
+            break;
         case .Updating:
             stateString = "Updating"
+            break;
         case .UpdatedByRemote:
             stateString = "UpdatedByRemote"
+            break;
         case .Resuming:
             stateString = "Resuming"
+            break;
         case .Released:
             stateString = "Released"
+            break;
         case .Referred:
             stateString = "Referred"
+            break;
         case .PushIncomingReceived:
             stateString = "PushIncomingReceived"
+            break;
         case .Pausing:
             stateString = "Pausing"
+            break;
         case .Paused:
             stateString = "Paused"
+            break;
         case .PausedByRemote:
             stateString = "PausedByRemote"
+            break;
         case .OutgoingProgress:
             stateString = "OutgoingProgress"
+            break;
         }
         let json = ["Type":"Registration","Status":stateString,"Message":message]
         let result = CDVPluginResult.init(status: CDVCommandStatus_OK, messageAs: json)
+        result?.setKeepCallbackAs(true);
         if mCallbackListener != "" {
             self.commandDelegate.send(result, callbackId: mCallbackListener)
         }

@@ -285,6 +285,7 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
         case LinphoneCallOutgoing:
             [self hidePad:TRUE animated:TRUE];
             [self hideRoutes:TRUE animated:TRUE];
+            break;
         default:
             break;
     }
