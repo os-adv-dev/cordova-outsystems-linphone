@@ -103,10 +103,13 @@ class ProviderDelegate: NSObject {
 				switch code {
 				case CXErrorCodeIncomingCallError.filteredByDoNotDisturb.rawValue:
 					callInfo?.reason = Reason.DoNotDisturb
+            		break;
 				case CXErrorCodeIncomingCallError.filteredByBlockList.rawValue:
 					callInfo?.reason = Reason.DoNotDisturb
+            		break;
 				default:
 					callInfo?.reason = Reason.Unknown
+            		break;
 				}
 				self.callInfos.updateValue(callInfo!, forKey: uuid)
 				try? call?.decline(reason: callInfo!.reason)
