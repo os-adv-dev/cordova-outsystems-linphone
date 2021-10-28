@@ -112,6 +112,11 @@
         <resource-file src="src/android/drawable/custom1.png" target="res/drawable/custom1.png" />
         <resource-file src="src/android/drawable/custom2.png" target="res/drawable/custom2.png" />
         <resource-file src="src/android/drawable/pause_default.png" target="res/drawable/pause_default.png" />
+
+        <resource-file src="src/android/drawable/switch_camera.xml" target="res/drawable/switch_camera.xml" />
+        <resource-file src="src/android/drawable/call_audio_switch.xml" target="res/drawable/call_audio_switch.xml" />
+        <resource-file src="src/android/drawable/bluetooth_audio.png" target="res/drawable/bluetooth_audio.png" />
+        <resource-file src="src/android/drawable/camera_swap.png" target="res/drawable/camera_swap.png" />
         
         <resource-file src="src/android/values/colors.xml" target="res/values/colors.xml" />
         

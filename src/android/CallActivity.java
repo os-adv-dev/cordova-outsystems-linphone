@@ -22,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.linphone.core.Address;
+import org.linphone.core.AudioDevice;
 import org.linphone.core.Call;
 import org.linphone.core.Core;
 import org.linphone.core.CoreListenerStub;
@@ -415,6 +416,10 @@ public class CallActivity extends Activity {
     }
 
     public void toggleSpeaker(View view) {
+        View v = findViewById(R.id.toggleBluetooth);
+        if (v.isSelected()){
+            v.setSelected(false);
+        }
         view.setSelected(!view.isSelected());
         Linphone.toggleSpeaker();
     }
@@ -1035,5 +1040,14 @@ public class CallActivity extends Activity {
 
     public void TerminateCall(View view) {
         hangup(0);
+    }
+
+    public void toggleAudioSource(View view) {
+        View v = findViewById(R.id.toggleSpeaker);
+        if (v.isSelected()){
+            v.setSelected(false);
+        }
+        view.setSelected(!view.isSelected());
+        Linphone.toggleBluetooth();
     }
 }

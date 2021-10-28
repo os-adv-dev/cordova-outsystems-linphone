@@ -627,19 +627,26 @@ public class Linphone extends CordovaPlugin {
             currentAudioDevice = currentCall.getOutputAudioDevice();
             Boolean speakerEnabled = currentAudioDevice.getType() == AudioDevice.Type.Speaker;
 
-            // We can get a list of all available audio devices using
-            // Note that on tablets for example, there may be no Earpiece device
-            for (AudioDevice audioDevice : core.getAudioDevices()) {
-                if (speakerEnabled && audioDevice.getType() == AudioDevice.Type.Earpiece) {
-                    core.getCurrentCall().setOutputAudioDevice(audioDevice);
-                    return;
-                } else if (!speakerEnabled && audioDevice.getType() == AudioDevice.Type.Speaker) {
-                    core.getCurrentCall().setOutputAudioDevice(audioDevice);
-                    return;
-                }/* If we wanted to route the audio to a bluetooth headset
-            else if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-                core.currentCall?.outputAudioDevice = audioDevice
-            }*/
+            if (speakerEnabled){
+                routeAudioTo(AudioDevice.Type.Earpiece,currentCall);
+            }else {
+                routeAudioTo(AudioDevice.Type.Speaker,currentCall);
+            }
+        }
+    }
+
+    public static void toggleBluetooth() throws NullPointerException{
+        // Get the currently used audio device
+        Call currentCall = core.getCurrentCall();
+        AudioDevice currentAudioDevice = null;
+        if (currentCall != null) {
+            currentAudioDevice = currentCall.getOutputAudioDevice();
+            Boolean bluetoothEnabled = currentAudioDevice.getType() == AudioDevice.Type.Bluetooth;
+
+            if (bluetoothEnabled){
+                routeAudioTo(AudioDevice.Type.Earpiece,currentCall);
+            }else{
+                routeAudioTo(AudioDevice.Type.Bluetooth,currentCall);
             }
         }
     }
@@ -848,4 +855,21 @@ public class Linphone extends CordovaPlugin {
             listenerCB.sendPluginResult(result);
         }
     }
+
+    private static void routeAudioTo(AudioDevice.Type type,Call currentCall) {
+        if (core.getCallsNb() == 0) {
+            Log.e(TAG,"[Audio Route Helper] No call found, aborting ["+type+"] audio route change");
+            return;
+        }
+        for (AudioDevice audioDevice : core.getAudioDevices()) {
+            if (type.equals(audioDevice.getType()) && audioDevice.hasCapability(AudioDevice.Capabilities.CapabilityPlay)){
+                Log.i(TAG,"[Audio Route Helper] Found ["+audioDevice.getType()+"] audio device ["+audioDevice.getDeviceName()+"], routing call audio to it");
+                currentCall.setOutputAudioDevice(audioDevice);
+                return;
+            }
+        }
+
+        Log.e(TAG,"[Audio Route Helper] Couldn't find ["+type+"] audio device");
+    }
+
 }
