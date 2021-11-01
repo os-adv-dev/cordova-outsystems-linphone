@@ -2,18 +2,18 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <bitmap android:src="@drawable/camera_swap"
-            android:tint="#444444"/>
+            android:tint="@color/buttonPressedColor"/>
     </item>
     <item android:state_enabled="false">
         <bitmap android:src="@drawable/camera_swap"
-            android:tint="#c4c4c4"/>
+            android:tint="@color/buttonDisabledColor"/>
     </item>
     <item android:state_selected="true">
         <bitmap android:src="@drawable/camera_swap"
-            android:tint="#444444"/>
+            android:tint="@color/buttonSelectedColor"/>
     </item>
     <item>
         <bitmap android:src="@drawable/camera_swap"
-            android:tint="#808080"/>
+            android:tint="@color/buttonColor"/>
     </item>
 </selector>

@@ -4,7 +4,7 @@ var path = require('path');
 
 module.exports = function (context) {
     
-    console.log("Start changing Code Files!");
+    console.log("Start changing CallActivity!");
     var Q = require("q");
     var deferral = new Q.defer();
 
@@ -29,9 +29,9 @@ module.exports = function (context) {
 
         
         fs.writeFileSync(appFilePath, content);
-        console.log("Finished changing BeaconReferenceApplication!");
+        console.log("Finished changing CallActivity!");
     }else{
-        console.log("Error could not find BeaconReferenceApplication!");
+        console.log("Error could not find CallActivity!");
     }
     deferral.resolve();
 

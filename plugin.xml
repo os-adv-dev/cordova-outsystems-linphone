@@ -8,8 +8,11 @@
     <js-module src="www/linphone.js" name="linphone">
         <clobbers target="linphone" />
     </js-module>
-    <hook type="before_plugin_install" src="hooks/outsystems/handle_google_services.js" />
-    <!--<hook type="after_plugin_install" src="hooks/outsystems/google_services_cleanup.js" />-->
+
+    <dependency id="cordova-outsystems-firebase-core" url="https://github.com/OutSystems/cordova-outsystems-firebase-core.git#1.0.0"/>
+    
+    <hook type="before_plugin_install" src="hooks/outsystems/unzipCopyImageAssets.js" />
+    <hook type="before_plugin_install" src="hooks/outsystems/ChangeColors.js" />
 
     <!-- android -->
     <platform name="android">
@@ -117,8 +120,6 @@
         <resource-file src="src/android/drawable/call_audio_switch.xml" target="res/drawable/call_audio_switch.xml" />
         <resource-file src="src/android/drawable/bluetooth_audio.png" target="res/drawable/bluetooth_audio.png" />
         <resource-file src="src/android/drawable/camera_swap.png" target="res/drawable/camera_swap.png" />
-        
-        <resource-file src="src/android/values/colors.xml" target="res/values/colors.xml" />
         
     </platform>
 
@@ -230,22 +231,14 @@
         <source-file src="src/ios/VideoZoomHandler.m" />
         <source-file src="src/ios/UIInterfaceStyleButton.h" />
         <source-file src="src/ios/UIInterfaceStyleButton.m" />
-        
-        <!--source-file src="src/ios/UILinphoneAudioPlayer.xib"/>
-        <source-file src="src/ios/UIConfirmationDialog.xib"/>
-        <source-file src="src/ios/UICallPausedCell.xib"/>
-        <source-file src="src/ios/UICallConferenceCell.xib"/>
-        <source-file src="src/ios/CallView.xib" />
-        <source-file src="src/ios/CallIncomingView.xib" />
-        <source-file src="src/ios/CallOutgoingView.xib" /-->
 
-        <resource-file src="src/ios/UILinphoneAudioPlayer.xib" />
-        <resource-file src="src/ios/UIConfirmationDialog.xib" />
-        <resource-file src="src/ios/UICallPausedCell.xib" />
-        <resource-file src="src/ios/UICallConferenceCell.xib" />
-        <resource-file src="src/ios/CallView.xib" />
-        <resource-file src="src/ios/CallIncomingView.xib" />
-        <resource-file src="src/ios/CallOutgoingView.xib" />
+        <resource-file src="src/ios/Views/UILinphoneAudioPlayer.xib" />
+        <resource-file src="src/ios/Views/UIConfirmationDialog.xib" />
+        <resource-file src="src/ios/Views/UICallPausedCell.xib" />
+        <resource-file src="src/ios/Views/UICallConferenceCell.xib" />
+        <resource-file src="src/ios/Views/CallView.xib" />
+        <resource-file src="src/ios/Views/CallIncomingView.xib" />
+        <resource-file src="src/ios/Views/CallOutgoingView.xib" />
 
         <source-file src="src/ios/Linphone.swift" />
         <source-file src="src/ios/ProviderDelegate.swift" />
@@ -716,6 +709,13 @@
         <resource-file src="src/ios/images/voicemail@2x.png"/>
         <resource-file src="src/ios/images/waiting_time.png"/>
         <resource-file src="src/ios/images/waiting_time@2x.png"/>
+
+        <resource-file src="src/ios/Colors/CallBottomButtonBarColor.colorset"/>
+        <resource-file src="src/ios/Colors/headerColor.colorset"/>
+        <resource-file src="src/ios/Colors/HeaderLableColor.colorset"/>
+        <resource-file src="src/ios/Colors/noActiveCallBgColor.colorset"/>
+        <resource-file src="src/ios/Colors/textColor.colorset"/>
+        <resource-file src="src/ios/Colors/textColorNoActiveCall.colorset"/>
 
     </platform>
 

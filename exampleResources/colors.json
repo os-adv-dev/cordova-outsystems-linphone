@@ -1,0 +1,16 @@
+{
+    "initialisColor":"#f3f3f3",
+    "contactNumberColor":"#808080",
+    "contactNameColor":"#808080",
+    "keypadBgColor":"#444444",
+    "keypadBgColorPressed":"#808080",
+    "hangupBgColor":"#444444",
+    "hangupBgColorPressed":"#ff0000",
+    "initialsCircleColor":"#ffab4d",
+    "initialsBgColor":"#a1a1a1",
+    "buttonPressedColor":"#444444",
+    "buttonDisabledColor":"#c4c4c4",
+    "buttonSelectedColor":"#444444",
+    "buttonColor":"#808080"
+}
+    

@@ -2,18 +2,18 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <bitmap android:src="@drawable/bluetooth_audio"
-            android:tint="#444444"/>
-    </item>
-    <item android:state_enabled="false">
-        <bitmap android:src="@drawable/bluetooth_audio"
-            android:tint="#c4c4c4"/>
-    </item>
-    <item android:state_selected="true">
-        <bitmap android:src="@drawable/bluetooth_audio"
-            android:tint="#444444"/>
-    </item>
-    <item>
-        <bitmap android:src="@drawable/bluetooth_audio"
-            android:tint="#808080"/>
-    </item>
+        android:tint="@color/buttonPressedColor"/>
+</item>
+<item android:state_enabled="false">
+    <bitmap android:src="@drawable/bluetooth_audio"
+        android:tint="@color/buttonDisabledColor"/>
+</item>
+<item android:state_selected="true">
+    <bitmap android:src="@drawable/bluetooth_audio"
+        android:tint="@color/buttonSelectedColor"/>
+</item>
+<item>
+    <bitmap android:src="@drawable/bluetooth_audio"
+        android:tint="@color/buttonColor"/>
+</item>
 </selector>
