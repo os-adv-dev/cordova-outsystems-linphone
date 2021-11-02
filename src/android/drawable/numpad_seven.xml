@@ -2,10 +2,10 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <bitmap android:src="@drawable/numpad_7"
-            android:tint="#444444"/>
+            android:tint="@color/buttonPressedColor"/>
     </item>
     <item>
         <bitmap android:src="@drawable/numpad_7"
-            android:tint="#808080"/>
+            android:tint="@color/buttonColor"/>
     </item>
 </selector>

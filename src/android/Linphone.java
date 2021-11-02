@@ -136,6 +136,7 @@ public class Linphone extends CordovaPlugin {
                     call.putExtra("Domain",args.getString(0));
                     call.putExtra("Video",(args.getInt(1)==1));
                     call.putExtra("LowBandwidth",args.getBoolean(2));
+                    call.putExtra("earlyMedia",args.getBoolean(3));
                     cordova.getActivity().startActivity(call);
                 }
                 return true;
@@ -191,6 +192,7 @@ public class Linphone extends CordovaPlugin {
                 call.putExtra("Domain",arguments.getString(0));
                 call.putExtra("Video",arguments.getBoolean(1));
                 call.putExtra("LowBandwidth",arguments.getBoolean(2));
+                call.putExtra("earlyMedia",arguments.getBoolean(3));
                 cordova.getActivity().startActivity(call);
                 break;
             case 0:
@@ -203,360 +205,358 @@ public class Linphone extends CordovaPlugin {
 
     public void setListeners(){
         Log.d(TAG,"Added Listeners!");
-        coreListener = new CoreListenerStub(){
-            @Override
-            public void onAccountRegistrationStateChanged(@NonNull Core core, @NonNull Account account, RegistrationState state, @NonNull String message) {
-                super.onAccountRegistrationStateChanged(core, account, state, message);
-                //findViewById<TextView>(R.id.registration_status).text = message
-                Log.d(TAG,"Account Registration State Changed!");
-                JSONObject objReply;
-                PluginResult result = null;
-                if (state == RegistrationState.Failed) {
-                    try {
-                        objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Failed\",\"Message\":\""+message+"\"}");
+        if (coreListener == null) {
+            coreListener = new CoreListenerStub() {
+                @Override
+                public void onAccountRegistrationStateChanged(@NonNull Core core, @NonNull Account account, RegistrationState state, @NonNull String message) {
+                    super.onAccountRegistrationStateChanged(core, account, state, message);
+                    //findViewById<TextView>(R.id.registration_status).text = message
+                    Log.d(TAG, "Account Registration State Changed!");
+                    JSONObject objReply;
+                    PluginResult result = null;
+                    if (state == RegistrationState.Failed) {
+                        try {
+                            objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Failed\",\"Message\":\"" + message + "\"}");
 
-                        result = new PluginResult(PluginResult.Status.OK,objReply);
+                            result = new PluginResult(PluginResult.Status.OK, objReply);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                        }
+                    } else if (state == RegistrationState.Ok) {
+                        try {
+                            objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Success\",\"Message\":\"" + account.getParams().getContactUriParameters() + "\"}");
+                            result = new PluginResult(PluginResult.Status.OK, objReply);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                        }
+
+
+                        // This will display the push information stored in the contact URI parameters
+                        //findViewById<TextView>(R.id.push_info).text = account.params.contactUriParameters
+                    } else {
+                        try {
+                            objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Unknown\"}");
+                            result = new PluginResult(PluginResult.Status.OK, objReply);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                        }
+                    }
+
+                    result.setKeepCallback(true);
+                    if (listenerCB != null) {
+                        listenerCB.sendPluginResult(result);
+                    }
+                }
+
+                @Override
+                public void onAudioDeviceChanged(@NonNull Core core, @NonNull AudioDevice audioDevice) {
+                    // This callback will be triggered when a successful audio device has been changed
+                    Log.d(TAG, "Audio Device Changed!");
+                    PluginResult result;
+                    try {
+                        JSONObject objReply = new JSONObject("{\"Type\":\"AudioChanged\"}");
+                        result = new PluginResult(PluginResult.Status.OK, objReply);
                     } catch (JSONException e) {
                         e.printStackTrace();
-                        result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
+                        result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
                     }
-                } else if (state == RegistrationState.Ok) {
+                    result.setKeepCallback(true);
+                    if (listenerCB != null) {
+                        listenerCB.sendPluginResult(result);
+                    }
+
+                    super.onAudioDeviceChanged(core, audioDevice);
+                }
+
+                @Override
+                public void onAudioDevicesListUpdated(@NonNull Core core) {
+                    // This callback will be triggered when the available devices list has changed,
+                    // for example after a bluetooth headset has been connected/disconnected.
+                    Log.d(TAG, "Audio devices list updated!");
+                    PluginResult result;
                     try {
-                        objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Success\",\"Message\":\""+account.getParams().getContactUriParameters()+"\"}");
-                        result = new PluginResult(PluginResult.Status.OK,objReply);
+                        JSONObject objReply = new JSONObject("{\"Type\":\"AudioUpdated\"}");
+                        result = new PluginResult(PluginResult.Status.OK, objReply);
                     } catch (JSONException e) {
                         e.printStackTrace();
-                        result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
+                        result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                    }
+                    result.setKeepCallback(true);
+                    if (listenerCB != null) {
+                        listenerCB.sendPluginResult(result);
                     }
 
+                    super.onAudioDevicesListUpdated(core);
+                }
 
-                    // This will display the push information stored in the contact URI parameters
-                    //findViewById<TextView>(R.id.push_info).text = account.params.contactUriParameters
-                }else{
-                    try {
-                        objReply = new JSONObject("{\"Type\":\"Registration\",\"Status\":\"Unknown\"}");
-                        result = new PluginResult(PluginResult.Status.OK,objReply);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
+                @Override
+                public void onCallStateChanged(@NonNull Core core, @NonNull Call call, Call.State state, @NonNull String message) {
+                    super.onCallStateChanged(core, call, state, message);
+                    //findViewById<TextView>(R.id.call_status).text = message
+                    Log.d(TAG, "Call State Changed!");
+                    JSONObject objReply;
+                    PluginResult result = null;
+                    // When a call is received
+                    switch (state) {
+                        case IncomingReceived:
+                            Log.d(TAG, "IncomingReceived");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingCall\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            Intent answer = new Intent(cordova.getActivity(), CallActivity.class);
+                            answer.putExtra("Video", false);
+                            answer.putExtra("Type", "Ringing");
+                            cordova.getActivity().startActivity(answer);
+                            //findViewById<EditText>(R.id.remote_address).setText(call.remoteAddress.asStringUriOnly())
+                            break;
+
+                        case Connected:
+                            Log.d(TAG, "Connected");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Connected\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            //findViewById<Button>(R.id.mute_mic).isEnabled = true
+                            //findViewById<Button>(R.id.toggle_speaker).isEnabled = true
+                            break;
+
+                        case Released:
+                            Log.d(TAG, "Released");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Released\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // Call state will be released shortly after the End state
+                            break;
+                        case OutgoingInit:
+                            Log.d(TAG, "OutgoingInit");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingInit\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // First state an outgoing call will go through
+                            break;
+                        case OutgoingProgress:
+                            Log.d(TAG, "OutgoingProgress");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingProgress\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // Right after outgoing init
+                            break;
+                        case OutgoingRinging:
+                            Log.d(TAG, "OutgoingRinging");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingRinging\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // This state will be reached upon reception of the 180 RINGING
+                            break;
+                        case StreamsRunning:
+                            Log.d(TAG, "StreamsRunning");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"StreamsRunning\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // This state indicates the call is active.
+                            // You may reach this state multiple times, for example after a pause/resume
+                            // or after the ICE negotiation completes
+                            // Wait for the call to be connected before allowing a call update
+
+                            // Only enable toggle camera button if there is more than 1 camera and the video is enabled
+                            // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)
+                            //findViewById<Button>(R.id.toggle_camera).isEnabled = core.videoDevicesList.size > 2 && call.currentParams.videoEnabled()
+                            break;
+                        case Paused:
+                            Log.d(TAG, "Paused");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Paused\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // When you put a call in pause, it will became Paused
+                            break;
+                        case PausedByRemote:
+                            Log.d(TAG, "PausedByRemote");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"PausedByRemote\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // When the remote end of the call pauses it, it will be PausedByRemote
+                            break;
+                        case Updating:
+                            Log.d(TAG, "Updating");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Updating\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // When we request a call update, for example when toggling video
+                            break;
+                        case UpdatedByRemote:
+                            Log.d(TAG, "UpdatedByRemote");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"UpdatedByRemote\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            // When the remote requests a call update
+                            break;
+                        case Error:
+                            Log.d(TAG, "Error");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Error\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case End:
+                            Log.d(TAG, "End");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"End\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case Idle:
+                            Log.d(TAG, "Idle");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Idle\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case Pausing:
+                            Log.d(TAG, "Pausing");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Pausing\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case Resuming:
+                            Log.d(TAG, "Resuming");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Resuming\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case EarlyUpdating:
+                            Log.d(TAG, "EarlyUpdating");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"EarlyUpdating\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case Referred:
+                            Log.d(TAG, "Referred");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Referred\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case IncomingEarlyMedia:
+                            Log.d(TAG, "IncomingEarlyMedia");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingEarlyMedia\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case OutgoingEarlyMedia:
+                            Log.d(TAG, "OutgoingEarlyMedia");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingEarlyMedia\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case EarlyUpdatedByRemote:
+                            Log.d(TAG, "EarlyUpdatedByRemote");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"EarlyUpdatedByRemote\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+                        case PushIncomingReceived:
+                            Log.d(TAG, "PushIncomingReceived");
+                            try {
+                                objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"PushIncomingReceived\",\"Message\":\"" + message + "\"}");
+                                result = new PluginResult(PluginResult.Status.OK, objReply);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                result = new PluginResult(PluginResult.Status.OK, e.getLocalizedMessage());
+                            }
+                            break;
+
+                    }
+                    result.setKeepCallback(true);
+                    if (listenerCB != null) {
+                        listenerCB.sendPluginResult(result);
                     }
                 }
 
-                result.setKeepCallback(true);
-                if (listenerCB != null){
-                    listenerCB.sendPluginResult(result);
-                }
-            }
-
-            @Override
-            public void onAudioDeviceChanged(@NonNull Core core, @NonNull AudioDevice audioDevice) {
-                // This callback will be triggered when a successful audio device has been changed
-                Log.d(TAG,"Audio Device Changed!");
-                PluginResult result;
-                try {
-                    JSONObject objReply = new JSONObject("{\"Type\":\"AudioChanged\"}");
-                    result = new PluginResult(PluginResult.Status.OK,objReply);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                }
-                result.setKeepCallback(true);
-                if (listenerCB != null){
-                    listenerCB.sendPluginResult(result);
-                }
-
-                super.onAudioDeviceChanged(core, audioDevice);
-            }
-
-            @Override
-            public void onAudioDevicesListUpdated(@NonNull Core core) {
-                // This callback will be triggered when the available devices list has changed,
-                // for example after a bluetooth headset has been connected/disconnected.
-                Log.d(TAG,"Audio devices list updated!");
-                PluginResult result;
-                try {
-                    JSONObject objReply = new JSONObject("{\"Type\":\"AudioUpdated\"}");
-                    result = new PluginResult(PluginResult.Status.OK,objReply);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                }
-                result.setKeepCallback(true);
-                if (listenerCB != null){
-                    listenerCB.sendPluginResult(result);
-                }
-
-                super.onAudioDevicesListUpdated(core);
-            }
-
-            @Override
-            public void onCallStateChanged(@NonNull Core core, @NonNull Call call, Call.State state, @NonNull String message) {
-                super.onCallStateChanged(core, call, state, message);
-                //findViewById<TextView>(R.id.call_status).text = message
-                Log.d(TAG,"Call State Changed!");
-                JSONObject objReply;
-                PluginResult result = null;
-                // When a call is received
-                switch (state) {
-                    case IncomingReceived :
-                        Log.d(TAG,"IncomingReceived");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingCall\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        Intent answer = new Intent(cordova.getActivity(),CallActivity.class);
-                        answer.putExtra("Video",false);
-                        answer.putExtra("Type","Ringing");
-                        cordova.getActivity().startActivity(answer);
-                        //findViewById<EditText>(R.id.remote_address).setText(call.remoteAddress.asStringUriOnly())
-                        break;
-
-                    case Connected :
-                        Log.d(TAG,"Connected");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Connected\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        //findViewById<Button>(R.id.mute_mic).isEnabled = true
-                        //findViewById<Button>(R.id.toggle_speaker).isEnabled = true
-                        break;
-
-                    case Released :
-                        Log.d(TAG,"Released");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Released\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // Call state will be released shortly after the End state
-                        break;
-                    case OutgoingInit:
-                        Log.d(TAG,"OutgoingInit");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingInit\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // First state an outgoing call will go through
-                        break;
-                    case OutgoingProgress:
-                        Log.d(TAG,"OutgoingProgress");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingProgress\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // Right after outgoing init
-                        break;
-                    case OutgoingRinging:
-                        Log.d(TAG,"OutgoingRinging");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingRinging\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // This state will be reached upon reception of the 180 RINGING
-                        break;
-                    case StreamsRunning:
-                        Log.d(TAG,"StreamsRunning");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"StreamsRunning\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // This state indicates the call is active.
-                        // You may reach this state multiple times, for example after a pause/resume
-                        // or after the ICE negotiation completes
-                        // Wait for the call to be connected before allowing a call update
-
-                        // Only enable toggle camera button if there is more than 1 camera and the video is enabled
-                        // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)
-                        //findViewById<Button>(R.id.toggle_camera).isEnabled = core.videoDevicesList.size > 2 && call.currentParams.videoEnabled()
-                        break;
-                    case Paused:
-                        Log.d(TAG,"Paused");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Paused\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // When you put a call in pause, it will became Paused
-                        break;
-                    case PausedByRemote:
-                        Log.d(TAG,"PausedByRemote");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"PausedByRemote\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // When the remote end of the call pauses it, it will be PausedByRemote
-                        break;
-                    case Updating:
-                        Log.d(TAG,"Updating");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Updating\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // When we request a call update, for example when toggling video
-                        break;
-                    case UpdatedByRemote:
-                        Log.d(TAG,"UpdatedByRemote");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"UpdatedByRemote\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        // When the remote requests a call update
-                        break;
-                    case Error:
-                        Log.d(TAG,"Error");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Error\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case End:
-                        Log.d(TAG,"End");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"End\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case Idle:
-                        Log.d(TAG,"Idle");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Idle\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case Pausing:
-                        Log.d(TAG,"Pausing");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Pausing\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case Resuming:
-                        Log.d(TAG,"Resuming");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Resuming\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case EarlyUpdating:
-                        Log.d(TAG,"EarlyUpdating");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"EarlyUpdating\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case Referred:
-                        Log.d(TAG,"Referred");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"Referred\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case IncomingEarlyMedia:
-                        Log.d(TAG,"IncomingEarlyMedia");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"IncomingEarlyMedia\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        Intent answerEarlyMedia = new Intent(cordova.getActivity(),CallActivity.class);
-                        answerEarlyMedia.putExtra("Video",true);
-                        answerEarlyMedia.putExtra("Type","Ringing");
-                        cordova.getActivity().startActivity(answerEarlyMedia);
-                        break;
-                    case OutgoingEarlyMedia:
-                        Log.d(TAG,"OutgoingEarlyMedia");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"OutgoingEarlyMedia\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case EarlyUpdatedByRemote:
-                        Log.d(TAG,"EarlyUpdatedByRemote");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"EarlyUpdatedByRemote\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-                    case PushIncomingReceived:
-                        Log.d(TAG,"PushIncomingReceived");
-                        try {
-                            objReply = new JSONObject("{\"Type\":\"CallState\",\"State\":\"PushIncomingReceived\",\"Message\":\""+message+"\"}");
-                            result = new PluginResult(PluginResult.Status.OK,objReply);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            result = new PluginResult(PluginResult.Status.OK,e.getLocalizedMessage());
-                        }
-                        break;
-
-                }
-                result.setKeepCallback(true);
-                if (listenerCB != null){
-                    listenerCB.sendPluginResult(result);
-                }
-            }
-
-        };
-        core.addListener(coreListener);
+            };
+            core.addListener(coreListener);
+        }
     }
 
 
@@ -627,19 +627,26 @@ public class Linphone extends CordovaPlugin {
             currentAudioDevice = currentCall.getOutputAudioDevice();
             Boolean speakerEnabled = currentAudioDevice.getType() == AudioDevice.Type.Speaker;
 
-            // We can get a list of all available audio devices using
-            // Note that on tablets for example, there may be no Earpiece device
-            for (AudioDevice audioDevice : core.getAudioDevices()) {
-                if (speakerEnabled && audioDevice.getType() == AudioDevice.Type.Earpiece) {
-                    core.getCurrentCall().setOutputAudioDevice(audioDevice);
-                    return;
-                } else if (!speakerEnabled && audioDevice.getType() == AudioDevice.Type.Speaker) {
-                    core.getCurrentCall().setOutputAudioDevice(audioDevice);
-                    return;
-                }/* If we wanted to route the audio to a bluetooth headset
-            else if (audioDevice.type == AudioDevice.Type.Bluetooth) {
-                core.currentCall?.outputAudioDevice = audioDevice
-            }*/
+            if (speakerEnabled){
+                routeAudioTo(AudioDevice.Type.Earpiece,currentCall);
+            }else {
+                routeAudioTo(AudioDevice.Type.Speaker,currentCall);
+            }
+        }
+    }
+
+    public static void toggleBluetooth() throws NullPointerException{
+        // Get the currently used audio device
+        Call currentCall = core.getCurrentCall();
+        AudioDevice currentAudioDevice = null;
+        if (currentCall != null) {
+            currentAudioDevice = currentCall.getOutputAudioDevice();
+            Boolean bluetoothEnabled = currentAudioDevice.getType() == AudioDevice.Type.Bluetooth;
+
+            if (bluetoothEnabled){
+                routeAudioTo(AudioDevice.Type.Earpiece,currentCall);
+            }else{
+                routeAudioTo(AudioDevice.Type.Bluetooth,currentCall);
             }
         }
     }
@@ -677,7 +684,7 @@ public class Linphone extends CordovaPlugin {
         core.clearAllAuthInfo();
     }
 
-    public static void outgoingCall(String domain,Boolean video,Boolean lowBandwith) {
+    public static void outgoingCall(String domain, Boolean video, Boolean lowBandwidth, Boolean earlyMedia) {
         if(!core.isNetworkReachable()){
             Log.e(TAG,"Network unreachable, aborting Call!");
             return;
@@ -708,14 +715,13 @@ public class Linphone extends CordovaPlugin {
             return;
         }
 
-        if(lowBandwith){
-            params.enableLowBandwidth(true);
-        }
+        params.enableLowBandwidth(lowBandwidth);
         // We can now configure it
         // Here we ask for no encryption but we could ask for ZRTP/SRTP/DTLS
         params.setMediaEncryption(MediaEncryption.None);
         // If we wanted to start the call with video directly
         params.enableVideo(video);
+        params.enableEarlyMediaSending(earlyMedia);
 
         core.getVideoActivationPolicy().setAutomaticallyAccept(video);
 
@@ -848,4 +854,21 @@ public class Linphone extends CordovaPlugin {
             listenerCB.sendPluginResult(result);
         }
     }
+
+    private static void routeAudioTo(AudioDevice.Type type,Call currentCall) {
+        if (core.getCallsNb() == 0) {
+            Log.e(TAG,"[Audio Route Helper] No call found, aborting ["+type+"] audio route change");
+            return;
+        }
+        for (AudioDevice audioDevice : core.getAudioDevices()) {
+            if (type.equals(audioDevice.getType()) && audioDevice.hasCapability(AudioDevice.Capabilities.CapabilityPlay)){
+                Log.i(TAG,"[Audio Route Helper] Found ["+audioDevice.getType()+"] audio device ["+audioDevice.getDeviceName()+"], routing call audio to it");
+                currentCall.setOutputAudioDevice(audioDevice);
+                return;
+            }
+        }
+
+        Log.e(TAG,"[Audio Route Helper] Couldn't find ["+type+"] audio device");
+    }
+
 }

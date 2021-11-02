@@ -43,7 +43,7 @@
 	_call = NULL;
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
 	[super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
 	if (_earlyMedia && linphone_core_get_calls_nb([[CallManager instance] getCore]) < 2) {
 		_earlyMediaView.hidden = NO;
@@ -64,9 +64,17 @@
 
 //TODO add auto_answer
 - (void)callUpdate:(LinphoneCall *)acall state:(LinphoneCallState)astate {
-	if (_call == acall && (astate == LinphoneCallEnd || astate == LinphoneCallError)) {
-		[_delegate incomingCallAborted:_call];
-	}/* else if ([LinphoneManager.instance lpConfigBoolForKey:@"auto_answer"]) {
+    if (_call == acall) {
+        if (astate == LinphoneCallEnd || astate == LinphoneCallError) {
+            [_delegate incomingCallAborted:_call];
+        }else if (astate == LinphoneCallIncomingEarlyMedia && !_earlyMedia){
+            _earlyMedia = YES;
+            _earlyMediaView.hidden = NO;
+            [self update];
+            linphone_call_set_next_video_frame_decoded_callback(acall, hideSpinner, (__bridge void *)(self));
+        }
+    }
+	/* else if ([LinphoneManager.instance lpConfigBoolForKey:@"auto_answer"]) {
 		LinphoneCallState state = linphone_call_get_state(_call);
 		if (state == LinphoneCallIncomingReceived) {
 			NSLog(@"Auto answering call");
@@ -103,8 +111,9 @@ static void hideSpinner(LinphoneCall *call, void *user_data) {
 	if ( linphone_core_get_calls_nb([[CallManager instance] getCore]) < 2) {
 		linphone_call_accept_early_media(_call);
 		// linphone_call_params_get_used_video_codec return 0 if no video stream enabled
-		if (linphone_call_params_get_used_video_codec(linphone_call_get_current_params(_call))) {
-			linphone_call_set_next_video_frame_decoded_callback(call, hideSpinner, (__bridge void *)(self));
+        if(linphone_call_params_get_used_video_codec( linphone_call_get_current_params(_call))) {
+            
+            linphone_call_set_next_video_frame_decoded_callback(call, hideSpinner, (__bridge void *)(self));
 		}
 	} else {
 		_earlyMediaView.hidden = YES;
