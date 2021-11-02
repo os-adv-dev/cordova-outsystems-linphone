@@ -19,8 +19,8 @@ exports.disconnect = function(success,failure){
 exports.delete = function(success,failure){
     exec(success,failure,"Linphone","delete",[])
 }
-exports.call = function(success,failure,domain,isVideo,lowBandwidth){
-    exec(success,failure,"Linphone","call",[domain,isVideo,lowBandwidth])
+exports.call = function(success,failure,domain,isVideo,lowBandwidth,earlyMedia){
+    exec(success,failure,"Linphone","call",[domain,isVideo,lowBandwidth,earlyMedia])
 }
 exports.setAutoAcceptVideo = function(success,failure,boolvalue){
     exec(success,failure,"Linphone","setAutoAcceptVideo",[domain,boolvalue])

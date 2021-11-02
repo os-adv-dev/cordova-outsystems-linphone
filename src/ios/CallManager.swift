@@ -323,7 +323,7 @@ import AVFoundation
 		}
 	}
     
-    func doCall(addr: Address, isSas: Bool, isLowBandwidth:Bool, isVideo:Bool) throws {
+    func doCall(addr: Address, isSas: Bool, isLowBandwidth:Bool, isVideo:Bool, isEarlyMedia:Bool) throws {
         let displayName = addr.displayName
         
         let lcallParams = try CallManager.instance().lc!.createCallParams(call: nil)
@@ -336,6 +336,7 @@ import AVFoundation
         if transportType != nil {
             try addr.setTransport(newValue: transportType!)
         }
+        lcallParams.earlyMediaSendingEnabled = isEarlyMedia
 
         if (displayName != nil) {
             try addr.setDisplayname(newValue: displayName)
@@ -353,6 +354,7 @@ import AVFoundation
             if (isSas) {
                 lcallParams.mediaEncryption = .ZRTP
             }
+            lcallParams
             
             let call = CallManager.instance().lc!.inviteAddressWithParams(addr: addr, params: lcallParams)
             if (call != nil) {

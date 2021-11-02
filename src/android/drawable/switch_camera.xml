@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
-        <bitmap android:src="@drawable/pause_default"
+        <bitmap android:src="@drawable/camera_swap"
             android:tint="@color/buttonPressedColor"/>
     </item>
     <item android:state_enabled="false">
-        <bitmap android:src="@drawable/pause_default"
+        <bitmap android:src="@drawable/camera_swap"
             android:tint="@color/buttonDisabledColor"/>
     </item>
     <item android:state_selected="true">
-        <bitmap android:src="@drawable/pause_default"
+        <bitmap android:src="@drawable/camera_swap"
             android:tint="@color/buttonSelectedColor"/>
     </item>
     <item>
-        <bitmap android:src="@drawable/pause_default"
+        <bitmap android:src="@drawable/camera_swap"
             android:tint="@color/buttonColor"/>
     </item>
 </selector>
