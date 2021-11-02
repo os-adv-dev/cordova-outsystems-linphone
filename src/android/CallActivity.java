@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import org.linphone.core.Address;
 import org.linphone.core.AudioDevice;
 import org.linphone.core.Call;
+import org.linphone.core.CallParams;
 import org.linphone.core.Core;
 import org.linphone.core.CoreListenerStub;
 
@@ -39,7 +40,7 @@ import java.util.TimerTask;
 
 public class CallActivity extends Activity {
 
-    private boolean isVideo = false;
+    public boolean isVideo = false;
     public static Handler mHandlerRest;
     public Handler mHandlerDMFT;
     private CoreListenerStub callListener;
@@ -79,8 +80,16 @@ public class CallActivity extends Activity {
                 }
                 isVideo = currIntent.getBooleanExtra("Video",false);
                 Boolean lowBandwidth = currIntent.getBooleanExtra("LowBandwidth",false);
-                Linphone.outgoingCall(domain,isVideo,lowBandwidth);
-                OugoingCall();
+                Boolean earlyMedia = currIntent.getBooleanExtra("earlyMedia",false);
+                if(!isVideo){
+                    isVideo = earlyMedia;
+                }
+                if(lowBandwidth){
+                    isVideo = false;
+                    earlyMedia = false;
+                }
+                Linphone.outgoingCall(domain,isVideo,lowBandwidth,earlyMedia);
+                OugoingCall(earlyMedia);
                 break;
             case "Ringing":
                 isVideo = currIntent.getBooleanExtra("Video",false);
@@ -198,6 +207,10 @@ public class CallActivity extends Activity {
                             break;
                         case IncomingEarlyMedia:
                             Log.d(Linphone.TAG, "IncomingEarlyMedia");
+                            if (!isVideo){
+                                isVideo = true;
+                                IncomingCall();
+                            }
                             break;
                         case PushIncomingReceived:
                             Log.d(Linphone.TAG, "PushIncomingReceived");
@@ -288,31 +301,39 @@ public class CallActivity extends Activity {
         }
     }
 
-    public void OugoingCall(){
+    public void OugoingCall(Boolean earlyMedia){
         if(Linphone.core.getCurrentCall() != null) {
-
-            findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+            Call currCall = Linphone.core.getCurrentCall();
             findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
 
             String name = "";
-            if(Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName() == null){
-                name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            if(currCall.getRemoteAddress().getDisplayName() == null){
+                name = currCall.getRemoteAddress().getDisplayName();
             }else{
                 name = "Jonh Doe";
             }
+
+            findViewById(R.id.ringing_buttons).setVisibility(View.GONE);
+            findViewById(R.id.calling_buttons).setVisibility(View.VISIBLE);
+            findViewById(R.id.numbpad_button).setVisibility(View.GONE);
+            findViewById(R.id.call_buttons).setVisibility(View.GONE);
+
+            findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
+            if (earlyMedia){
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.VISIBLE);
+            }else {
+                findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
+
+            }
+
             ((TextView) findViewById(R.id.contact_name)).setText(name);
-            ((TextView) findViewById(R.id.contact_number)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
+            ((TextView) findViewById(R.id.contact_number)).setText(currCall.getRemoteAddress().asStringUriOnly());
 
             ((TextView) findViewById(R.id.initials)).setText(getInitials(name));
 
 
             findViewById(R.id.layout_early).setVisibility(View.GONE);
-            findViewById(R.id.ringing_buttons).setVisibility(View.GONE);
-            findViewById(R.id.calling_buttons).setVisibility(View.VISIBLE);
-            //findViewById(R.id.call_buttons).setVisibility(View.GONE);
             findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
-            findViewById(R.id.numbpad_button).setVisibility(View.GONE);
-            findViewById(R.id.call_buttons).setVisibility(View.GONE);
 
         }else{
             Linphone.core.removeListener(callListener);
@@ -322,11 +343,12 @@ public class CallActivity extends Activity {
     }
 
     public void IncomingCall(){
-
-        if(Linphone.core.getCurrentCall() != null) {
+        Call currCall = Linphone.core.getCurrentCall();
+        if(currCall != null) {
+            currCall.acceptEarlyMedia();
             String name = "";
-            if(Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName() == null){
-                name = Linphone.core.getCurrentCall().getRemoteAddress().getDisplayName();
+            if(currCall.getRemoteAddress().getDisplayName() == null){
+                name = currCall.getRemoteAddress().getDisplayName();
             }else{
                 name = "Jonh Doe";
             }
@@ -337,27 +359,15 @@ public class CallActivity extends Activity {
             findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
             findViewById(R.id.ringing_buttons).setVisibility(View.VISIBLE);
 
-            if (isVideo) {
-                findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+            findViewById(R.id.remote_video_surface).setVisibility(View.VISIBLE);
+            findViewById(R.id.local_preview_video_surface).setVisibility(View.GONE);
 
 
-                ((TextView) findViewById(R.id.contact_name_early)).setText(name);
-                ((TextView) findViewById(R.id.contact_name_early)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
+            ((TextView) findViewById(R.id.contact_name_early)).setText(name);
+            ((TextView) findViewById(R.id.contact_name_early)).setText(currCall.getRemoteAddress().asStringUriOnly());
 
-                findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
-                findViewById(R.id.layout_initials).setVisibility(View.GONE);
-            } else {
-                findViewById(R.id.remote_video_surface).setVisibility(View.GONE);
-
-                ((TextView) findViewById(R.id.contact_name)).setText(name);
-                ((TextView) findViewById(R.id.contact_number)).setText(Linphone.core.getCurrentCall().getRemoteAddress().asStringUriOnly());
-
-                ((TextView) findViewById(R.id.initials)).setText(getInitials(name));
-
-
-                findViewById(R.id.layout_early).setVisibility(View.GONE);
-                findViewById(R.id.layout_initials).setVisibility(View.VISIBLE);
-            }
+            findViewById(R.id.layout_early).setVisibility(View.VISIBLE);
+            findViewById(R.id.layout_initials).setVisibility(View.GONE);
 
         }else{
             Linphone.core.removeListener(callListener);
@@ -431,11 +441,7 @@ public class CallActivity extends Activity {
             org.linphone.core.tools.Log.e("[Notification Broadcast Receiver] Couldn't find call from remote address "+remoteSipAddress);
             return;
         }
-        if (isVideo){
-            call.acceptEarlyMedia();
-        }else{
-            call.accept();
-        }
+        call.accept();
         Call();
 
     }

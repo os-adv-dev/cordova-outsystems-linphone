@@ -12,6 +12,8 @@ buildscript {
 }
 
 repositories {
+    google()
+    jcenter()
     maven {
         url "https://linphone.org/maven_repository"
     }
@@ -22,6 +24,7 @@ dependencies {
     /*debugImplementation "org.linphone:linphone-sdk-android-debug:5.0+"
     releaseImplementation "org.linphone:linphone-sdk-android:5.0+"*/
     implementation 'org.linphone:linphone-sdk-android:5.1+'
+    implementation 'com.amitshekhar.android:android-networking:1.0.2'
 }
 
 /*// use postBuildExtras to make sure the plugin is applied after

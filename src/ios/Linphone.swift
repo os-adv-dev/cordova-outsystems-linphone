@@ -262,6 +262,7 @@ var login: Bool = false
         let isVideoNumber = command.argument(at: 1) as! NSNumber
         let isVideo = isVideoNumber.boolValue
         let isLowBandwidth = command.argument(at: 2) as! Bool
+        let isEarlyMedia = command.argument(at: 3) as! Bool
         
         if proxyServer != "" {
             domain = domain.components(separatedBy: "@")[0]
@@ -282,7 +283,7 @@ var login: Bool = false
         // For OutgoingCall, show CallOutgoingView
         if lc != nil {
             CallManager.instance().setCore(core: lc.getCobject!)
-            try! CallManager.instance().doCall(addr: remoteAddress!, isSas: false, isLowBandwidth:isLowBandwidth, isVideo:isVideo)
+            try! CallManager.instance().doCall(addr: remoteAddress!, isSas: false, isLowBandwidth:isLowBandwidth, isVideo:isVideo, isEarlyMedia:isEarlyMedia)
             
             callOutgoingView = CallOutgoingView()
             viewController.present(callOutgoingView, animated: true, completion: nil)
@@ -424,6 +425,14 @@ var login: Bool = false
             break;
         case .IncomingEarlyMedia:
             stateString = "IncomingEarlyMedia"
+            do {
+                let result = try call.acceptEarlyMedia()
+                print("Call Accepted Early Media \(result)")
+            } catch {
+                print("Accept Early Media failed with error: \(error)")
+            }
+            
+
             break;
         case .OutgoingInit:
             stateString = "OutgoingInit"

@@ -24,6 +24,7 @@
         </config-file>
 
         <hook type="after_plugin_install" src="hooks/outsystems/android/replaceBundleId.js" />
+        <hook type="after_plugin_install" src="hooks/outsystems/android/changeManifest.js" />
 
         <config-file parent="/manifest/application" target="AndroidManifest.xml">
             <activity android:exported="true" android:launchMode="singleTop" android:name="com.outsystems.linphone.CallActivity" />
@@ -34,7 +35,7 @@
                 </intent-filter>
             </service>
             <!-- This is to handle the PUSH_RECEIVED broadcast emitted by our SDK upon push reception -->
-            <receiver android:name="com.outsystems.linphone.pushnotifications.PushBroadcastReceiver">
+            <receiver android:name="com.outsystems.linphone.pushnotifications.PushBroadcastReceiver" android:exported="false">
                 <intent-filter>
                     <action android:name="org.linphone.core.action.PUSH_RECEIVED"/>
                 </intent-filter>
@@ -44,11 +45,7 @@
             <service android:name="org.linphone.core.tools.service.CoreService" android:foregroundServiceType="phoneCall|camera|microphone" android:stopWithTask="false" />
 
         </config-file>
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application/activity[@android:name='MainActivity']">
-            <application android:alwaysRetainTaskState="true" />
-        </edit-config>
-
-        <dependency id="cordova-custom-config" version="^5.1.0" />
+        
 
         <source-file src="src/android/PushBroadcastReceiver.java" target-dir="src/com/outsystems/linphone/pushnotifications" />
         <source-file src="src/android/Linphone.java" target-dir="src/com/outsystems/linphone" />
@@ -61,7 +58,6 @@
         <!--Adding this dependency allows the linphone-sdk to automatically handle audio focus-->
         <framework src="com.google.android.flexbox:flexbox:3.0.0"/>
         <framework src="androidx.media:media:1.2.0"/>
-        <framework src="com.amitshekhar.android:android-networking:1.0.2"/>
         <framework src="src/android/dependencies.gradle" custom="true" type="gradleReference" />
 
         <resource-file src="src/android/layout/callscreen.xml" target="res/layout/callscreen.xml" />
@@ -140,6 +136,13 @@
             </pods>
         </podspec>
 
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+			<string>This app needs access to the camera for video calls.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
+			<string>This app needs access to the microphone for audio calls.</string>
+		</config-file>
+        
         <!--preference name="USESWIFTLANGUAGEVERSION" value="5" default="5"/-->
         <dependency id="cordova-plugin-add-swift-support" version="2.0.2"/>
         <hook type="after_plugin_install" src="hooks/outsystems/ios/handle_swift_import.js" />
